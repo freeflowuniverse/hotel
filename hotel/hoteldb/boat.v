@@ -1,7 +1,8 @@
 module hoteldb
 
-import freeflowuniverse.crystalib.params
+import freeflowuniverse.crystallib.params
 import freeflowuniverse.crystallib.texttools
+import freeflowuniverse.backoffice.finance
 
 pub enum BoatType {
 	sail
@@ -15,6 +16,7 @@ pub enum ExperienceRequired {
 	sailing_license
 }
 
+[heap]
 pub struct Boat{
 	ProductMixin
 pub mut:
@@ -25,21 +27,16 @@ pub mut:
 
 // TODO maybe do a function to calculate cost for fuel + time
 
-pub fn (hdb HotelDB) add_boat (o params.Params) {
+pub fn (mut db HotelDB) add_boat (mut o params.Params) ! {
 
 	boat := Boat{
-		id : o.get('id')
-		name : o.get('name')
-		url : o.get('url')
-		description : o.get('description')
-		price : finance.amount_get(o.get('price'))
-		state: match_state(o.get('state'))
-		boat_type : match_boat_type(o.get('boat_type'))
-		horsepower : o.get('horsepower').int()
-		experience_required : match_experience_required(o.get('experience_required'))
+		ProductMixin: db.params_to_product(mut o)!
+		boat_type : match_boat_type(o.get('boat_type')!)
+		horsepower : o.get('horsepower')!.int()
+		experience_required : match_experience_required(o.get('experience_required')!)
 	}
 
-	hdb.products << boat
+	db.products << boat
 }
 
 pub fn match_boat_type(boat_type_ string) BoatType {
