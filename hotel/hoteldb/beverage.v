@@ -1,7 +1,6 @@
 module hoteldb
 
 import freeflowuniverse.crystallib.params
-import freeflowuniverse.backoffice.finance
 
 [heap] 
 pub struct Beverage{
@@ -11,18 +10,18 @@ pub mut:
 	alcoholic   bool
 }
 
-pub fn (db HotelDB) list_beverages () string {
-	mut text := '**Beverage Choices**
-\n'
-	for product in db.products {
-		match product {
-			Beverage {text += product.stringify()}
-			else {}
-		}
-	}
+// pub fn (db HotelDB) list_beverages () string {
+// 	mut text := '**Beverage Choices**
+// \n'
+// 	for product in db.products {
+// 		match product {
+// 			Beverage {text += product.stringify()}
+// 			else {}
+// 		}
+// 	}
 
-	return text
-}
+// 	return text
+// }
 
 fn (beverage Beverage) stringify () string {
 	mut text := ''

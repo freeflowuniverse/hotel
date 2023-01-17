@@ -26,7 +26,24 @@ pub mut:
 	state       ProductState	
 }
 
+pub fn (db HotelDB) list_products (product_type string) string {
+	mut text := '**${product_type.capitalize()} Choices**
+\n'
+	full_type := 'freeflowuniverse.hotel.hotel.hoteldb.${product_type}'
+	for product in db.products {
+		// println(product.type_name())
+		if product.type_name() == full_type {
+			match product {
+				Food {text += product.stringify()}
+				Beverage {text += product.stringify()}
+				Room {text += product.stringify()}
+				Boat {text += product.stringify()}
+			}
+		}
+	}
 
+	return text
+}
 
 fn (pm ProductMixin) stringify () string {
 
@@ -60,6 +77,15 @@ fn (mut db HotelDB) add_product (mut action actionparser.Action) ! {
 		'boat' {db.add_boat(mut action.params) or {return error("Failed to add boat: \n${err}")}}
 		else {return error("Incorrect command: ${action.name.split('.')[1]}, please ensure product is followed by 'food', 'beverage', 'room' or 'boat'")}
 	}
+}
+
+pub fn (db HotelDB) check_product_exists (id string) bool {
+	for product in db.products {
+		if product.id == id {
+			return true
+		}
+	}
+	return false
 }
 
 pub fn (db HotelDB) get_product (id string) !Product {

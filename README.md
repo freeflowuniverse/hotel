@@ -1,7 +1,8 @@
 # hotel
 
 # TODOs
-- implement proper bot behaviour
+- add logging to bot behaviour
+- deal with offset
 
 ## Bot Behaviour
 

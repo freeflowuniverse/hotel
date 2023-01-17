@@ -39,9 +39,7 @@ pub fn (db HotelDB) log_purchase (o PurchaseArgs) ! {
 
 	c_name := customer.name()
 
-	mut total_price := finance.Amount{
-		val: product.price.val*o.quantity.int()
-	}
+	total_price := finance.amount_get((product.price.val*o.quantity.int()).str())
 
 	purchase := Purchase{
 		date: date.str()

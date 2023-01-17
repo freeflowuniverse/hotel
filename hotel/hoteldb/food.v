@@ -2,7 +2,6 @@ module hoteldb
 
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.crystallib.texttools
-import freeflowuniverse.backoffice.finance
 
 pub enum FoodType {
 	starter
@@ -20,18 +19,18 @@ pub mut:
 	food_type FoodType
 }
 
-pub fn (db HotelDB) list_food () string {
-	mut text := '**Food Choices**
-\n'
-	for product in db.products {
-		match product {
-			Food {text += product.stringify()}
-			else {}
-		}
-	}
+// pub fn (db HotelDB) list_food () string {
+// 	mut text := '**Food Choices**
+// \n'
+// 	for product in db.products {
+// 		match product {
+// 			Food {text += product.stringify()}
+// 			else {}
+// 		}
+// 	}
 
-	return text
-}
+// 	return text
+// }
 
 fn (food Food) stringify () string {
 	mut text := ''

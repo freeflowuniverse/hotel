@@ -1,6 +1,5 @@
 module hoteldb
 
-import freeflowuniverse.backoffice.finance
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.crystallib.texttools
 
@@ -20,8 +19,19 @@ pub mut:
 	ensuite      bool = true
 }
 
-pub fn (room Room) capacity () int {
-	return room.double_count * 2 + room.single_count
+fn (room Room) stringify () string {
+	mut text := room.ProductMixin.stringify()
+
+	view := '$room.view'
+	ensuite := '$room.ensuite'
+
+	text += 'Room Number: ${room.room_number}
+Double Beds: ${room.double_count}
+Single Beds: ${room.single_count}
+View: ${view.capitalize()}
+Ensuite: ${ensuite.capitalize()}\n'
+
+	return text
 }
 
 pub fn (mut db HotelDB) add_room (mut o params.Params) ! {

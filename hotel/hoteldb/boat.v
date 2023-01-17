@@ -2,7 +2,6 @@ module hoteldb
 
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.crystallib.texttools
-import freeflowuniverse.backoffice.finance
 
 pub enum BoatType {
 	sail
@@ -38,6 +37,20 @@ pub fn (mut db HotelDB) add_boat (mut o params.Params) ! {
 
 	db.products << boat
 }
+
+fn (boat Boat) stringify () string {
+	mut text := boat.ProductMixin.stringify()
+
+	boat_type := '$boat.boat_type'
+	experience_required := '$boat.experience_required'
+
+	text += 'Boat Type: ${boat_type.capitalize()}
+Horsepower: ${boat.horsepower}
+Experience Required: ${experience_required.capitalize()}\n'
+
+	return text
+}
+
 
 pub fn match_boat_type(boat_type_ string) BoatType {
 	corrected_boat_type := texttools.name_fix_no_underscore_no_ext(boat_type_)
