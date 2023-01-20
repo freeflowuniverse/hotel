@@ -45,3 +45,7 @@ pub fn (db HotelDB) get_customer_by_username (username string) !&Customer {
 pub fn (customer Customer) name() string {
 	return "$customer.firstname $customer.lastname"
 }
+
+fn record_customer () {
+	// TODO 
+}

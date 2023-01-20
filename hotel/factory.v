@@ -7,14 +7,12 @@ pub struct Hotel {
 pub mut:
 	name  string
 	db    HotelDB
-	vbot  VBot
 }
 
 pub fn new(name string, bot_token string) Hotel{
 	mut p:= Hotel{
 		name: name
 		db: hoteldb.new()
-		vbot: new_bot(bot_token)
 	}
 	return p
 }
