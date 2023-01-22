@@ -19,6 +19,19 @@ pub mut:
 	ensuite      bool = true
 }
 
+pub fn (db HotelDB) get_rooms () []Room{
+	return db.get_products('room').map(it as Room)
+}
+
+pub fn (db HotelDB) get_room (id string) !Room {
+	room := db.get_product(id) or {return error("Failed to get room $id: $err")}
+	return room as Room
+}
+
+pub fn (mut db HotelDB) delete_room (id string) ! {
+	db.delete_product(id) or {return error("Failed to delete room $id: $err")}
+}
+
 fn (room Room) stringify () string {
 	mut text := room.ProductMixin.stringify()
 
@@ -34,7 +47,7 @@ Ensuite: ${ensuite.capitalize()}\n'
 	return text
 }
 
-pub fn (mut db HotelDB) add_room (mut o params.Params) ! {
+pub fn (mut db HotelDB) add_room (mut o params.Params) !Product {
 
 	room := Room{
 		ProductMixin: db.params_to_product(mut o)!
@@ -45,10 +58,10 @@ pub fn (mut db HotelDB) add_room (mut o params.Params) ! {
 		ensuite : o.get('ensuite')!.bool()
 	}
 
-	db.products << room
+	return room
 }
 
-pub fn match_view(view_ string) View {
+fn match_view(view_ string) View {
 	corrected_view := texttools.name_fix_no_underscore_no_ext(view_)
 
 	view := match corrected_view {

@@ -1,5 +1,0 @@
-{"date":"2023-01-17 17:39:35","product_id":"B01","product_name":"Large Water","customer_id":"1","customer_name":"Jonathan Ouwerx","quantity":2,"total_price":{"val":4}}
-{"date":"2023-01-17 17:43:04","product_id":"B01","product_name":"Large Water","customer_id":"1","customer_name":"Jonathan Ouwerx","quantity":2,"total_price":{"val":4}}
-{"date":"2023-01-17 17:43:11","product_id":"B01","product_name":"Large Water","customer_id":"1","customer_name":"Jonathan Ouwerx","quantity":4,"total_price":{"val":8}}
-{"date":"2023-01-17 17:43:19","product_id":"F01","product_name":"Crispy Chicken Curry","customer_id":"1","customer_name":"Jonathan Ouwerx","quantity":1,"total_price":{"val":7}}
-{"date":"2023-01-17 22:51:19","product_id":"B01","product_name":"Large Water","customer_id":"1","customer_name":"Jonathan Ouwerx","quantity":2,"total_price":{"currency":{"name":"USD","usdval":1},"val":0}}

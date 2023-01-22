@@ -19,6 +19,20 @@ pub mut:
 	food_type FoodType
 }
 
+pub fn (db HotelDB) get_foods () []Food{
+	return db.get_products('food').map(it as Food)
+}
+
+pub fn (db HotelDB) get_food (id string) !Food {
+	food := db.get_product(id) or {return error("Failed to get food $id: $err")}
+	return food as Food
+}
+
+pub fn (mut db HotelDB) delete_food (id string) ! {
+	db.delete_product(id) or {return error("Failed to delete food $id: $err")}
+}
+
+
 // pub fn (db HotelDB) list_food () string {
 // 	mut text := '**Food Choices**
 // \n'
@@ -51,7 +65,7 @@ fn (food Food) stringify () string {
 
 
 
-fn (mut db HotelDB) add_food (mut o params.Params) ! {
+pub fn (mut db HotelDB) add_food (mut o params.Params) !Product {
 
 	// TODO change the input to a product mixin + function
 	food := Food{ // ? Should this be mutable?
@@ -62,7 +76,7 @@ fn (mut db HotelDB) add_food (mut o params.Params) ! {
 		food_type : match_food_type(o.get('food_type')!)
 	}
 
-	db.products << food
+	return food
 }
 
 fn match_food_type(food_type_ string) FoodType {

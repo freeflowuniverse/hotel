@@ -58,7 +58,7 @@ fn (mut bot TelegramBot) parse_cli_update(update vgram.Update) ! {
 			'basket' {bot.basket_command()} 
 			'clear' {bot.clear_command()}
 			'confirm' {bot.confirm_command()}
-			'ui' {bot.ui_command()}
+			// 'ui' {bot.ui_command()}
 			else {bot.other_command()}
 		}
 	}
@@ -81,7 +81,7 @@ Commands:
 **/basket** : View your current basket
 **/confirm** : Confirm and submit your oder
 **/clear** : Clears the current basket
-**/ui** : View the Jungle Paradise's room availability
+**/ui** : Access a UI for ordering food : NOT AVAILABLE WIP
 
 **Order Details:**
 If you would like to order please send '/order',then a series of product:quantities separated by single spaces

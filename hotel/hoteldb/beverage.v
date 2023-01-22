@@ -10,6 +10,30 @@ pub mut:
 	alcoholic   bool
 }
 
+pub fn (mut db HotelDB) add_beverage (mut o params.Params) !Product {
+
+	beverage := Beverage{
+		ProductMixin: db.params_to_product(mut o)!
+		ConsumableMixin: db.params_to_consumable(mut o)!
+		alcoholic: o.get('alcoholic')!.bool()
+	}
+
+	return beverage
+}
+
+pub fn (db HotelDB) get_beverages () []Beverage{
+	return db.get_products('beverage').map(it as Beverage)
+}
+
+pub fn (db HotelDB) get_beverage (id string) !Beverage {
+	beverage := db.get_product(id) or {return error("Failed to get beverage $id: $err")}
+	return beverage as Beverage
+}
+
+pub fn (mut db HotelDB) delete_beverage (id string) ! {
+	db.delete_product(id) or {return error("Failed to delete beverage $id: $err")}
+}
+
 // pub fn (db HotelDB) list_beverages () string {
 // 	mut text := '**Beverage Choices**
 // \n'
@@ -33,13 +57,3 @@ fn (beverage Beverage) stringify () string {
 	return text
 }
 
-fn (mut db HotelDB) add_beverage (mut o params.Params) ! {
-
-	beverage := Beverage{
-		ProductMixin: db.params_to_product(mut o)!
-		ConsumableMixin: db.params_to_consumable(mut o)!
-		alcoholic: o.get('alcoholic')!.bool()
-	}
-
-	db.products << beverage
-}

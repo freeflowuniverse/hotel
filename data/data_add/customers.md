@@ -2,10 +2,10 @@
  id: '1'
  firstname: 'Jonathan'
  lastname: 'Ouwerx'
- username: 'jonathanouwerx'
+ telegram_username: 'jonathanouwerx'
 
 !!customer
  id: '2'
  firstname: 'Kristof'
  lastname: 'De Spiegeleer'
- username: 'despiegk'
+ telegram_username: 'despiegk'

@@ -24,9 +24,22 @@ pub mut:
 	experience_required  ExperienceRequired
 }
 
-// TODO maybe do a function to calculate cost for fuel + time
 
-pub fn (mut db HotelDB) add_boat (mut o params.Params) ! {
+pub fn (db HotelDB) get_boats () []Boat{
+	boats := db.get_products('boat').map(it as Boat)
+	return boats
+}
+
+pub fn (db HotelDB) get_boat (id string) !Boat {
+	boat := db.get_product(id) or {return error("Failed to get boat $id: $err")}
+	return boat as Boat
+}
+
+pub fn (mut db HotelDB) delete_boat (id string) ! {
+	db.delete_product(id) or {return error("Failed to delete boat $id: $err")}
+}
+
+pub fn (mut db HotelDB) add_boat (mut o params.Params) !Product {
 
 	boat := Boat{
 		ProductMixin: db.params_to_product(mut o)!
@@ -35,7 +48,7 @@ pub fn (mut db HotelDB) add_boat (mut o params.Params) ! {
 		experience_required : match_experience_required(o.get('experience_required')!)
 	}
 
-	db.products << boat
+	return boat
 }
 
 fn (boat Boat) stringify () string {

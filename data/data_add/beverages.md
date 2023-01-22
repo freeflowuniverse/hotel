@@ -26,3 +26,4 @@
  vegetarian:'true'
  vegan:'true'
  alcoholic:'false'
+ 
