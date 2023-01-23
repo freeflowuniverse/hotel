@@ -52,6 +52,7 @@ pub mut:
 struct ProductOrder {
 pub mut:
     product_id string
+	// TODO product hoteldb.product Product
 	product_type ProductType
     quantity int
     note string
@@ -95,7 +96,7 @@ pub fn (mut bot TelegramBot) launch_bot () ! {
 	}
 }
 
-fn running_display () {
+pub fn running_display () {
 	for true {
 		for i in ['', '.', '..', '...'] {
 			println("Bot is running$i")

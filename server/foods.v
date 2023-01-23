@@ -53,3 +53,21 @@ instance := app.h.delete_food(id,) or {
 return app.text("Delete Operation Successful") 
 }
 
+['/api/foods/stringified'; get]
+pub fn (mut app App) get_foods_api () vweb.Result {
+
+instance := app.h.get_foods_stringified()
+
+return app.json(instance) 
+}
+
+['/api/foods/stringified:id'; get]
+pub fn (mut app App) get_food_api (id string,) vweb.Result {
+
+instance := app.h.get_food_stringified(id,) or {
+	app.set_status(500, '')
+	return app.text('Function call failed: $err')
+}
+
+return app.json(instance) 
+}

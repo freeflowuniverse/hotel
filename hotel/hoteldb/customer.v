@@ -19,20 +19,16 @@ pub mut:
 	funds_log         []string
 }
 
-pub fn get_s () {
-
-}
-
-pub fn add_ () {
-	
-}
-
-pub fn get_ () {
-	
-}
-
-pub fn delete_ () {
-	
+pub fn (mut db HotelDB) delete_customer (id string) ! {
+	mut found := false
+	for customer in db.customers {
+		if customer.id == id {
+			db.customers = db.customers.filter(it.id!=id) // TODO check that this is valid
+		}
+	}
+	if found == false {
+		return error("Could not find customer $id in hotel database.")
+	}
 }
 
 pub fn (db HotelDB) get_customers () ![]&Customer {
@@ -52,6 +48,24 @@ pub fn (db HotelDB) get_customer (id string) !&Customer {
 	return error("Could not find customer $id in hotel database.")
 }
 
+pub fn (db HotelDB) get_customer_stringified(id string) !string {
+	customer := db.get_customer(id) or {return error("Failed to get customer: $err")}
+	text := '
+Customer ID: $id
+Customer Name: $customer.firstname $customer.lastname
+Telegram Username: $customer.telegram_username/n'
+
+	return text // TODO consider whether to return funds as well 
+}
+
+pub fn (db HotelDB) get_customers_stringified() string {
+	mut text := 'Hotel Customers:/n'
+	for customer in db.customers {
+		text += db.get_customer_stringified(customer.id) or {''}
+	}
+	return text
+}
+
 pub fn (db HotelDB) add_fund (customer_id string, amount_string string) ! {
 	mut customer := db.get_customer(customer_id) or {return error("Failed to get customer: $err")}
 
@@ -65,13 +79,11 @@ pub fn (db HotelDB) add_fund (customer_id string, amount_string string) ! {
 	customer.add_log(amount)
 }
 
-pub fn (db HotelDB) remove_fund (customer_id string, amount_string string, hard string) ! {
-	if hard == 'true' {
-		db.remove_fund_hard(customer_id, amount_string) or {return error("Failed to do hard remove of funds '$amount_string': $err")}
+fn (db HotelDB) transfer_fund_to_hotel (customer_id string, mut amount finance.Amount, hard bool) ! {
+	if hard == true {
+		db.remove_fund_hard(customer_id, mut amount) or {return error("Failed to do hard remove of funds '${amount.val}${amount.currency.name}': $err")}
 	} else {
 		mut customer := db.get_customer(customer_id) or {return error("Failed to get customer: $err")}
-
-		mut amount := db.currencies.amount_get(amount_string) or {return error("Failed to get amount from '$amount_string': $err")}
 
 		if customer.funds[amount.currency.name] == finance.Amount{} {
 			return error("The customer does not have any funds with that balance")
@@ -85,10 +97,8 @@ pub fn (db HotelDB) remove_fund (customer_id string, amount_string string, hard 
 	}
 }
 
-fn (db HotelDB) remove_fund_hard (customer_id string, amount_string string) ! {
+fn (db HotelDB) remove_fund_hard (customer_id string, mut amount finance.Amount) ! {
 	mut customer := db.get_customer(customer_id) or {return error("Failed to get customer: $err")}
-
-	mut amount := db.currencies.amount_get(amount_string) or {return error("Failed to get amount from '$amount_string': $err")}
 
 	outer: for currency_name, customer_amount in customer.funds {
 		amount.change_currency(db.currencies, currency_name) or {return error("Failed to change change currency: $err")}
@@ -147,10 +157,3 @@ fn (db HotelDB) generate_customer_id () string {
 	return (greatest_id + 1).str()
 }
 
-pub fn (customer Customer) name() string {
-	return "$customer.firstname $customer.lastname"
-}
-
-fn record_customer () {
-	// TODO 
-}

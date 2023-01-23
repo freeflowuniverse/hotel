@@ -53,3 +53,21 @@ instance := app.h.delete_customer(id,) or {
 return app.text("Delete Operation Successful") 
 }
 
+['/api/customers/stringified'; get]
+pub fn (mut app App) get_customers_api () vweb.Result {
+
+instance := app.h.get_customers_stringified()
+
+return app.json(instance) 
+}
+
+['/api/customers/stringified:id'; get]
+pub fn (mut app App) get_customer_api (id string,) vweb.Result {
+
+instance := app.h.get_customer_stringified(id,) or {
+	app.set_status(500, '')
+	return app.text('Function call failed: $err')
+}
+
+return app.json(instance) 
+}

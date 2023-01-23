@@ -56,3 +56,21 @@ instance := app.h.delete_purchase(id,) or {
 return app.text("Delete Operation Successful") 
 }
 
+['/api/purchases/stringified'; get]
+pub fn (mut app App) get_purchases_api () vweb.Result {
+
+instance := app.h.get_purchases_stringified()
+
+return app.json(instance) 
+}
+
+['/api/purchases/stringified:id'; get]
+pub fn (mut app App) get_purchase_api (id string,) vweb.Result {
+
+instance := app.h.get_purchase_stringified(id,) or {
+	app.set_status(500, '')
+	return app.text('Function call failed: $err')
+}
+
+return app.json(instance) 
+}

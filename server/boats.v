@@ -53,3 +53,21 @@ instance := app.h.delete_boat(id,) or {
 return app.text("Delete Operation Successful") 
 }
 
+['/api/boats/stringified'; get]
+pub fn (mut app App) get_boats_api () vweb.Result {
+
+instance := app.h.get_boats_stringified()
+
+return app.json(instance) 
+}
+
+['/api/boats/stringified:id'; get]
+pub fn (mut app App) get_boat_api (id string,) vweb.Result {
+
+instance := app.h.get_boat_stringified(id,) or {
+	app.set_status(500, '')
+	return app.text('Function call failed: $err')
+}
+
+return app.json(instance) 
+}

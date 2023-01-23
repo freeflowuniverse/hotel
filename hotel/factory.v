@@ -13,6 +13,8 @@ pub mut:
 	db_path    Path
 }
 
+// TODO function to update exchange rates
+
 pub fn new(name string, bot_token string, db_path_string string) !Hotel {
 
 	mut hotel := Hotel{

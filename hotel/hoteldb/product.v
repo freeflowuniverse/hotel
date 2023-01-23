@@ -35,7 +35,7 @@ pub fn (db HotelDB) check_product_exists (id string) bool {
 	return false
 }
 
-pub fn (db HotelDB) stringify_product (product_id string) !string {
+pub fn (db HotelDB) get_product_stringified (product_id string) !string {
 
 	product := db.get_product(product_id) or {return error("Failed to get product: $err")}
 
@@ -51,7 +51,7 @@ pub fn (db HotelDB) stringify_product (product_id string) !string {
 	return text
 }
 
-pub fn (db HotelDB) stringify_products (product_type string) string {
+pub fn (db HotelDB) get_products_stringified (product_type string) string {
 	mut text := '**${product_type.capitalize()} Choices**
 \n'
 	full_type := 'freeflowuniverse.hotel.hotel.hoteldb.${product_type}'

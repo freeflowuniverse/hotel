@@ -155,6 +155,8 @@ fn (mut bot TelegramBot) order_command (command Command) ! {
 	}
 }
 
+
+// TODO this needs to be changed
 fn print_successes(successes [][]string) string {
 	mut text := ''
 	for success in successes {

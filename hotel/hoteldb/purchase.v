@@ -1,11 +1,9 @@
 module hoteldb
 
 import freeflowuniverse.backoffice.finance
-import freeflowuniverse.crystallib.timetools {time_from_string}
+import freeflowuniverse.crystallib.timetools
 
 import time
-import os
-import json
 
 pub struct Purchase {
 	id           string
@@ -13,15 +11,20 @@ pub struct Purchase {
 	product      &Product
 	customer     &Customer
 	quantity     int // units/nights/hours
-	total_price  finance.Amount
+	total_amount  finance.Amount
 	// TODO should add unique purchase id
 }
+
+// struct Customer {
+// 	purchases []Purchase
+// }
 
 pub struct PurchaseArgs {
 	date        string
 	product_id  string [required]
 	customer_id string [required]
-	quantity    string = '2'
+	quantity    string
+	hard        string
 	// duplicate   bool // set true if you want to log an identical purchase multiple times
 }
 
@@ -42,6 +45,27 @@ pub fn (db HotelDB) get_purchase (id string) !Purchase {
 	return error("Could not find purchase $id in hotel database.")
 }
 
+pub fn (db HotelDB) get_purchase_stringified(id string) !string {
+	purchase := db.get_purchase(id) or {return error("Failed to find purchase $id: $err")}
+	text := '
+Purchase ID: $purchase.id
+Customer: $purchase.customer.id - $purchase.customer.firstname $purchase.customer.lastname
+Product: $purchase.product.id - $purchase.product.name
+Date: $purchase.date
+Quantity: $purchase.quantity
+Total Amount: ${purchase.total_amount.val}${purchase.total_amount.currency.name}/n'
+	return text
+}
+
+pub fn (db HotelDB) get_purchases_stringified() string {
+	mut text := 'Hotel Purchases:/n'
+	for purchase in db.purchases {
+		text += db.get_purchase_stringified(purchase.id) or {''}
+	}
+	return text
+}
+
+// ? maybe this shouldn't exist?
 pub fn (mut db HotelDB) delete_purchase (id string) ! {
 	mut found := false
 	for purchase in db.purchases {
@@ -59,7 +83,7 @@ pub fn (mut db HotelDB) add_purchase (o PurchaseArgs) ! {
 	if o.date == '' {
 		date = time.now()
 	} else {
-		date = time_from_string(o.date) or {return error('Failed to get time from date string: $o.date')}
+		date = timetools.time_from_string(o.date) or {return error('Failed to get time from date string: $o.date')}
 	}
 	
 	id := db.generate_purchase_id()
@@ -67,9 +91,7 @@ pub fn (mut db HotelDB) add_purchase (o PurchaseArgs) ! {
 	product := db.get_product(o.product_id) or {return error('Failed to get product $o.product_id: $err')}
 	customer := db.get_customer(o.customer_id) or {return error('Failed to get customer $o.customer_id: $err')}
 
-	c_name := customer.name()
-
-	total_price := db.currencies.amount_get((product.price.val*o.quantity.int()).str()) or {return error("Failed to get amount: $err")}
+	mut total_amount := db.currencies.amount_get((product.price.val*o.quantity.int()).str()) or {return error("Failed to get amount: $err")}
 
 	purchase := Purchase{
 		id: id
@@ -77,26 +99,20 @@ pub fn (mut db HotelDB) add_purchase (o PurchaseArgs) ! {
 		product: &product
 		customer: customer
 		quantity: o.quantity.int()
-		total_price: total_price
+		total_amount: total_amount
 	}
 
+	mut hard_transfer := false
+	if o.hard == 'true' {
+		hard_transfer = true
+	}
+
+	db.transfer_fund_to_hotel(o.customer_id, mut total_amount, hard_transfer) or {return error("Failed to transfer ${total_amount.val}${total_amount.currency.name} to hotel")}
+
 	db.purchases << purchase
-
-	// json_purchase := json.encode(purchase)
-	// if o.duplicate == false {
-	// 	println(db.log_file.path)
-	// 	mut json_purchases := os.read_lines(db.log_file.path) or {return error("Failed to read log file: $err")}
-	// 	if json_purchase in json_purchases {
-	// 		return error("Purchase already logged. Add 'duplicate: true' if this duplication was intended")
-	// 	}
-	// }
-
-	// mut log_file := os.open_append(db.log_file.path) or {return error("Failed to open log file: $err")}
-	// log_file.writeln(json_purchase) or {return error("Failed to write purchase: $purchase to purchase log: $err")}
-	// log_file.close()
 }
 
-pub fn (db HotelDB) generate_purchase_id () string {
+fn (db HotelDB) generate_purchase_id () string {
 	mut greatest_id := 0
 	for purchase in db.purchases {
 		if purchase.id.int() > greatest_id {
