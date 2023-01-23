@@ -25,15 +25,18 @@ pub fn (db HotelDB) get_beverages () []Beverage{
 	return db.get_products('beverage').map(it as Beverage)
 }
 
+// ! Can be replaced by db.products.filter(it.id==id)
 pub fn (db HotelDB) get_beverage (id string) !Beverage {
 	beverage := db.get_product(id) or {return error("Failed to get beverage $id: $err")}
 	return beverage as Beverage
 }
 
+// ! Can be replaced by db.products.filter(it.id!=id)
 pub fn (mut db HotelDB) delete_beverage (id string) ! {
 	db.delete_product(id) or {return error("Failed to delete beverage $id: $err")}
 }
 
+// ! get_products('beverage')
 // pub fn (db HotelDB) list_beverages () string {
 // 	mut text := '**Beverage Choices**
 // \n'

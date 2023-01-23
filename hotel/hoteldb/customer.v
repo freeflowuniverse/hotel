@@ -19,6 +19,7 @@ pub mut:
 	funds_log         []string
 }
 
+// ! Can be replaced by db.customers.filter(it.id!=id)
 pub fn (mut db HotelDB) delete_customer (id string) ! {
 	mut found := false
 	for customer in db.customers {
@@ -31,6 +32,7 @@ pub fn (mut db HotelDB) delete_customer (id string) ! {
 	}
 }
 
+// ! Can be replaced by db.customers
 pub fn (db HotelDB) get_customers () ![]&Customer {
 	mut customers := []&Customer{}
 	for customer in db.customers {

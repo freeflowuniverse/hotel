@@ -28,6 +28,7 @@ pub struct PurchaseArgs {
 	// duplicate   bool // set true if you want to log an identical purchase multiple times
 }
 
+// ! Can be replaced by db.purchases
 pub fn (db HotelDB) get_purchases () []Purchase {
 	mut purchases := []Purchase{}
 	for purchase in db.purchases {
@@ -36,6 +37,7 @@ pub fn (db HotelDB) get_purchases () []Purchase {
 	return purchases
 }
 
+// ! Can be replaced by db.purchases.filter(it.id==id)
 pub fn (db HotelDB) get_purchase (id string) !Purchase {
 	for purchase in db.purchases {
 		if purchase.id == id {
@@ -65,7 +67,7 @@ pub fn (db HotelDB) get_purchases_stringified() string {
 	return text
 }
 
-// ? maybe this shouldn't exist?
+// ! Can be replaced by db.purchases.filter(it.id!=id)
 pub fn (mut db HotelDB) delete_purchase (id string) ! {
 	mut found := false
 	for purchase in db.purchases {

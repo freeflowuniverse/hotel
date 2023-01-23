@@ -95,6 +95,7 @@ pub fn (mut db HotelDB) add_allergen (mut o params.Params) ! {
 	db.allergens << allergen 
 }
 
+// ! Can be replaced by db.allergens
 pub fn (db HotelDB) get_allergens () []Allergen {
 	mut allergens := []Allergen{}
 	for allergen in db.allergens {
@@ -103,6 +104,7 @@ pub fn (db HotelDB) get_allergens () []Allergen {
 	return allergens
 }
 
+// ! Can be replaced by db.allergens.filter(it.id==id)
 pub fn (db HotelDB) get_allergen (id string) !Allergen {
 	for allergen in db.allergens {
 		if allergen.id == id {
@@ -112,6 +114,7 @@ pub fn (db HotelDB) get_allergen (id string) !Allergen {
 	return error("Could not find allergen $id in hotel database.")
 }
 
+// ! Can be replaced by db.allergens.filter(it.id!=id)
 pub fn (mut db HotelDB) delete_allergen (id string) ! {
 	mut found := false
 	for allergen in db.allergens {

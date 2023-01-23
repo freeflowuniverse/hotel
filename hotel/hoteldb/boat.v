@@ -24,17 +24,18 @@ pub mut:
 	experience_required  ExperienceRequired
 }
 
-
 pub fn (db HotelDB) get_boats () []Boat{
 	boats := db.get_products('boat').map(it as Boat)
 	return boats
 }
 
+// ! Can be replaced by db.products.filter(it.id==id)
 pub fn (db HotelDB) get_boat (id string) !Boat {
 	boat := db.get_product(id) or {return error("Failed to get boat $id: $err")}
 	return boat as Boat
 }
 
+// ! Can be replaced by db.products.filter(it.id!=id)
 pub fn (mut db HotelDB) delete_boat (id string) ! {
 	db.delete_product(id) or {return error("Failed to delete boat $id: $err")}
 }

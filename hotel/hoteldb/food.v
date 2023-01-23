@@ -23,11 +23,13 @@ pub fn (db HotelDB) get_foods () []Food{
 	return db.get_products('food').map(it as Food)
 }
 
+// ! Can be replaced by db.products.filter(it.id==id)
 pub fn (db HotelDB) get_food (id string) !Food {
 	food := db.get_product(id) or {return error("Failed to get food $id: $err")}
 	return food as Food
 }
 
+// ! Can be replaced by db.products.filter(it.id!=id)
 pub fn (mut db HotelDB) delete_food (id string) ! {
 	db.delete_product(id) or {return error("Failed to delete food $id: $err")}
 }
