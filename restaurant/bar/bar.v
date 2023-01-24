@@ -1,10 +1,8 @@
 module bar
 
-import supply
-
 struct BarSupervisor {
 	bar_employees []barstaff.BarEmployee
-	storage        storage.Storage // The idea here is to have your menu defined by contents of supply
+	storage_id  string // The idea here is to have your menu defined by contents of supply
 }
 
 struct BarEmployee{}
