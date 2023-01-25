@@ -6,6 +6,7 @@ fn new () Accounting {
 
 // Employee login
 // Allows an employee to login to the treasury
+// FROM USER
 fn (mut accounting Accounting) employee_login (employee_id string) {
 
 }
@@ -28,10 +29,10 @@ fn (mut accounting Accounting) deduct_funds_from_person(recipient_id string, amo
 	return Transaction{}
 }
 
-// Transfer funds
+// external_payment_from_hotel
 // Give cash out of the system to an external supplier/contractor
-// FROM USER
-fn (mut accounting Accounting) transfer_funds_from_hotel(transaction Transaction) !Transaction {
+// TO USER / INTERNAL (if we create a wallet actor)
+fn (mut accounting Accounting) external_payment_from_hotel(transaction Transaction) !Transaction {
 
 }
 

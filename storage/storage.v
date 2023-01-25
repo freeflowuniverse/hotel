@@ -6,6 +6,9 @@ struct Storage {
 	id string
 	name string
 	supplies []ProductAmount
+	inventory_checks []InventoryCheck
+	serve_order  []ServeOrder
+	delivery_order []DeliveryOrder
 }
 
 struct Product {
@@ -29,6 +32,9 @@ enum Unit {
 	ml
 	grams
 	pieces
+	cups
+	tsp
+	tbsp
 }
 
 struct ServeOrder {
@@ -43,6 +49,24 @@ struct DeliveryOrder {
 	product_amount ProductAmount
 	description string
 }
+
+struct ExternalPayment {
+	subject string
+	amount finance.Amount
+	description string
+	bank_details string // TODO make this better
+}
+
+struct InventoryCheck {
+	product_amounts []ProductAmount
+	date    time.Time
+	employee_id  string
+}
+
+// inventory storage
+// prompts store manager to check that inventory matches up with online version
+// TO USER
+fn (storage Storage) inventory_storage () ! {}
 
 // check if below safe
 // called every time any product amount is removed from storage

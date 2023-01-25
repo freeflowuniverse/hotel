@@ -3,10 +3,11 @@ module accountant
 import finance
 import time
 import employee
+import library
 
 struct Accounting {
 mut:
-	employee_ids   []string //varies depending on current employee
+	employee_id    string //varies depending on current employee
 	registers      []Register
 	digital_funds  []finance.Amount
 	transactions   []Transaction // only refers to in/out of hotel
@@ -27,6 +28,9 @@ Transaction
 mut:
 	cash bool
 }
+
+// TODO figure out the different ways a hotel can transfer money out
+type TransactionDetails = CashDetails | BankTransferDetails | CryptoTransferDetails
 
 struct Register {
 mut:

@@ -64,3 +64,7 @@ fn (mut guest Guest) deduct_funds (amount finance.Amount) ! {}
 // sends a message to the user announcing an upcoming event, either self-booked or public
 // TO USER
 fn (guest Guest) send_update (update Update) ! {}
+
+// request bar song
+// allows the guest to request a certain song at the bar
+fn (guest Guest) request_song (song_name string, actor_id string, instance_id string) ! {}
