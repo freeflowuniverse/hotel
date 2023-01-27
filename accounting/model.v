@@ -1,22 +1,21 @@
 module accountant
 
-import finance
 import time
 import employee
 import library
 
 struct Accounting {
 mut:
-	employee_id    string //varies depending on current employee
 	registers      []Register
-	digital_funds  []finance.Amount
+	digital_funds  []library.Price
 	transactions   []Transaction // only refers to in/out of hotel
 }
 
 struct Transaction {
 mut:
+	id string
 	subject     string
-	amount      finance.Amount
+	amount      library.Price
 	description string
 	time        time.Time
 	employee_id string
@@ -36,7 +35,7 @@ struct Register {
 mut:
 	id              string
 	name            string
-	physical_funds  []finance.Amount
+	physical_funds  []library.Price
 	cash_validity   bool
 	last_cash_check time.Time
 }

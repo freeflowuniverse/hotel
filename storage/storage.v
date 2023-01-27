@@ -1,6 +1,6 @@
 module storage
 
-import finance
+import library
 
 struct Storage {
 	id string
@@ -31,7 +31,7 @@ struct Amount {
 enum Unit {
 	ml
 	grams
-	pieces
+	units
 	cups
 	tsp
 	tbsp
@@ -52,7 +52,7 @@ struct DeliveryOrder {
 
 struct ExternalPayment {
 	subject string
-	amount finance.Amount
+	amount library.Price
 	description string
 	bank_details string // TODO make this better
 }
@@ -99,5 +99,6 @@ fn (storage Storage) set_safe_minimum (product_amount ProductAmount) ! {}
 // send external payment request
 // sends a request to the accountant to transfer funds to an external party
 // INTERNAL
+// TODO decide args
 fn (storage Storage) send_external_payment_request () ! {}
 

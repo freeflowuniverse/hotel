@@ -1,70 +1,78 @@
 module guest
 
-import person
+import library.person
+import library.common
 import time
+import library.restaurant
 
 struct Guest {
+RestaurantRequests
 person.Person
+	confirmed_orders  []common.Order
 }
 
-struct Order {
-	id            string
-	product_code  string
-	quantity      string
-	note          string
-	start         time.Time
-	end           time.Time
-	delivery_time string
-	room_service  bool
-}
+// struct RestaurantRequests{}
 
-struct Complaint {
-	id string
-	subject string
-	complaint string
-}
+// fn (r RestaurantRequests) expose_food_order_confirmation {
+// 	order_type := params.get('order_type') // returns FoodOrder
+// 	encoded_confirmation := params.get('order_confirmation')
+// 	confirmation := json.decode(restaurant.FoodOrder, encoded_confirmation)!
+// 	guest.confirmed_orders << confirmation
+// 	// TODO send off params
+// }
 
-struct Update {
-	id     string
-	subject string
-	content  string
-	from   string
-	start    time.Time
-	end time.Time
-}
-
-// ? I dont think checkin is necessary
+/*
+Send Methods:
+- order (this is to get a thing)
+	- restaurant.bar (food, reservation) // ? should this be to waiter or to bar?
+	- restaurant.kitchen (drinks)
+	- dock (boat rentals)
+	- spa (spa sessions)
+	- room (rooms)
+	- reception (miscellaneous objects - towels, converters, batteries. If not available request_assistance) 
+	- reception.concierge (activity)
+	- cleaning (request cleaning) //? should this go to room or to cleaning
+	- cleaning.laundry (pickup)
+- request_assistance
+	- restaurant (waiter)
+	- reception (report issue, transfer luggage, make change, procure item)
+	- dock (boat issue)
+	- reception.concierge (see more activities)
+- get_product_selection
+	- restaurant.kitchen 
+	- restaurant.bar
+	- dock 
+	- spa 
+	- room
+	- cleaning.laundry 
+	- reception.concierge (see standard activities)
+- get_actor_details
+	- most actors 
+*/
 
 // order product
-// FROM USER
-fn (guest Guest) order_product (order Order) ! {}
+// should receive a Transaction message in return
+fn (guest Guest) order (order common.Order) ! {}
 
-// modify product order
-// FROM USER
-fn (guest Guest) modify_product_order (order_id string, order Order) ! {}
+fn (guest Guest) expose_order_confirmation (params Params) ! {
+	
+	order := common.params_to_order(params)
 
-// cancel product order
-// FROM USER
-fn (guest Guest) cancel_product_order (order_id string) ! {}
+	encoded_confirmation := params.get('order_confirmation')
+	confirmation := json.decode(common.Order, encoded_confirmation)!
 
-// submit complaint
-// FROM USER
-fn (guest Guest) submit_complaint (complaint Complaint) ! {}
+	guest.confirmed_orders << confirmation
+	// TODO send off params
+}
 
-// checkout
-// FROM USER
-fn (guest Guest) checkout () ! {}
+// ! currently I have managed to find a set off 
 
-// deduct funds
-// this is called by the dock, restaurant, bar, etc after a product order is received
-// INTERNAL
-fn (mut guest Guest) deduct_funds (amount finance.Amount) ! {}
+// request confirmation
+// should receive an AssistanceRequest in return
+fn (guest Guest) request_assistance (request AssistanceRequest) ! {}
 
-// announce upcoming event
-// sends a message to the user announcing an upcoming event, either self-booked or public
-// TO USER
-fn (guest Guest) send_update (update Update) ! {}
+// get info
+// should receive ProductCatalogue in return 
+fn (guest Guest) get_product_catalogue (request CatalogueRequest) ! {}
 
-// request bar song
-// allows the guest to request a certain song at the bar
-fn (guest Guest) request_song (song_name string, actor_id string, instance_id string) ! {}
+// need to create an expose_info_response but one for each possible response

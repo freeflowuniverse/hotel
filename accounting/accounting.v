@@ -1,13 +1,16 @@
 module accounting
 
+/*
+Send Methods:
+- 
+*/
+
+/*
+Send Methods:
+- 
+*/
+
 fn new () Accounting {
-
-}
-
-// Employee login
-// Allows an employee to login to the treasury
-// FROM USER
-fn (mut accounting Accounting) employee_login (employee_id string) {
 
 }
 
@@ -15,8 +18,11 @@ fn (mut accounting Accounting) employee_login (employee_id string) {
 // Add funds to person
 // adds funds to a specific guest and adds same to accountant physical funds
 // only add funds to physical funds if employee updates their own state
-// FROM USER
-fn (mut accounting Accounting) add_funds_to_person(recipient_id string, amount finance.Amount) !Transaction {
+// Called by:
+// ${interface}.deduct_funds_from_person(employee_id string, amount library.Price)
+// Calls:
+// person.deduct_digital_funds(employee_id string, amount library.Price) - in guest and employee
+fn (mut accounting Accounting) add_funds_to_person(recipient_id string, amount library.Price) !Transaction {
 
 	return Transaction{}
 }
@@ -24,16 +30,36 @@ fn (mut accounting Accounting) add_funds_to_person(recipient_id string, amount f
 // ? Why did this return a transaction again?
 // Deduct funds from person
 // deducts funds from a specific guest
-// FROM USER
-fn (mut accounting Accounting) deduct_funds_from_person(recipient_id string, amount finance.Amount) !Transaction {
+// Called by:
+// ${interface}.deduct_funds_from_person(employee_id string, amount library.Price)
+// Calls:
+// person.deduct_digital_funds(library.Price) - in guest and employee
+fn (mut accounting Accounting) deduct_funds_from_person(recipient_id string, amount library.Price) !Transaction {
 	return Transaction{}
 }
 
 // external_payment_from_hotel
 // Give cash out of the system to an external supplier/contractor
 // TO USER / INTERNAL (if we create a wallet actor)
-fn (mut accounting Accounting) external_payment_from_hotel(transaction Transaction) !Transaction {
+// Called by:
+// storage.send_external_payment_request
+// Calls:
+// $interface.external_payment_from_accounting
+fn (mut accounting Accounting) external_payment_from_accounting (transaction Transaction) !Transaction {
 
+}
+
+fn (mut accounting Accounting) report_external_payment_status (employee_id string, complete bool, note string) ! {
+
+	if complete == true {
+		transaction := Transaction{
+			
+		}
+
+		accounting.transactions << transaction
+	}
+
+		
 }
 
 // Check cash register
@@ -64,7 +90,7 @@ fn (accounting Accounting) get_transactions (actor_id string) {
 // Collect digital funds
 // collect digital funds from restaurant, bar, dock, etc and adds it to digital_funds
 // INTERNAL / FROM USER (would be better to do an internal timer)
-fn (accounting Accounting) add_funds_from_internal (sender string, amount finance.Amount) ! {
+fn (accounting Accounting) add_funds_from_internal (sender string, amount library.Price) ! {
 
 }
 

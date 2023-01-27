@@ -1,7 +1,7 @@
 module person
 
 import time
-import finance
+import library
 
 struct Person {
 	id                string // ? Should this be the main unique identifier or should employees and guests also have unique identifiers?
@@ -13,23 +13,23 @@ struct Person {
 	date_of_birth     time.Time
 	allergies         []string
 	preferred_contact string
-	digital_funds     []finance.Amount
+	digital_funds     []library.Price
 }
 
 pub struct MoneyReceipt {
 	subject     string
 	sender      string // actor_id.instance_id (instance_id is optional)
 	recipient   string // actor_id.instance_id (instance_id is optional)
-	amount      finance.Amount
+	amount      library.Price
 	description string
 	time        time.Time
 	employee_id string
 }
 
-fn (mut person Person) add_digital_funds(amount finance.Amount) ! {
+fn (mut person Person) add_digital_funds(amount library.Price) ! {
 
 }
 
-fn (mut person Person) deduct_digital_dunds(amount finance.Amount) {
+fn (mut person Person) deduct_digital_funds(amount library.Price) {
 	
 }

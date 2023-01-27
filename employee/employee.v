@@ -1,6 +1,6 @@
 module employee
 
-import person
+import library.person
 
 import time
 

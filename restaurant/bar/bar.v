@@ -1,6 +1,6 @@
 module bar
 
-import finance
+import library
 
 struct Bar {
 	employee_ids []string
