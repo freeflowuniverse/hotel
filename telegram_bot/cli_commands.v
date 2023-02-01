@@ -15,6 +15,10 @@ pub mut:
 // todo if a payment command has no currency, then this needs to be returned as error
 // todo if multiple commands in order return error message
 
+// TODOS 
+// todo kitchen should get notified of a new order immediately
+// todo add cancel order feature
+
 fn (mut bot TelegramBot) parse_cli_update(update vgram.Update) {
 
 	mut text := update.message.text
@@ -25,7 +29,6 @@ fn (mut bot TelegramBot) parse_cli_update(update vgram.Update) {
 	bot.check_sessions(username)
 	if bot.sessions[username].confirmation == true {
 		if text in ['y', 'Y', 'yes', 'Yes', 'yh', '1', 'one'] {
-			bot.sessions[username].confirmation = false
 			bot.hotel.db.input_order(mut bot.sessions[bot.current_user].order) or {
 				_ := bot.bot.send_message(
 					chat_id: bot.chat_id,
@@ -46,8 +49,8 @@ fn (mut bot TelegramBot) parse_cli_update(update vgram.Update) {
 			println("User: $bot.current_user - Succesfully confirmed order")
 			// println("Order: $bot.sessions[bot.current_user].order")
 			return
-		}
-
+		} 
+		bot.sessions[username].confirmation = false
 	}	
 
 	if text.len == 0 {
@@ -107,47 +110,66 @@ Commands:
 **/help** : See this message again
 **/order** : Add products to your basket
 **/register** : Register a new guest
-**/code** : Get a guest's code by email
 **/payment** : Allow an employee to register a guest's payment to the hotel
+**/code** : Get a guest's code by email
+**/outstanding** : View a guest's outstanding balance
+**/open** : View open orders
+**/close** : Close a specific order
 
 **Order Details:**
 If you would like to order please send '/order',then send a message with the following format:
-	_/order PRODUCT_CODE:QUANTITY:NOTE\\* PRODUCT_CODE:QUANTITY \\.\\.\\._
+    _/order GUESTCODE PRODUCT_CODE:QUANTITY:NOTE\\* PRODUCT_CODE:QUANTITY \\.\\.\\._
 
 An example is given on the following line:
-	_/order CJG:2 BJI:4_
+    _/order CJG:2 BJI:4_
 
 This is an order for two bottles of water and four chicken curries
 
 You can optionally add a note to the order like so:
-	_/order CJG:4:'With chapati not rice'_
+    _/order CJG:4:'With chapati not rice'_
 
 However the note must be in single quotation marks
 
 **Register Details:**
 
 If you would like to register a new guest, send a message with the following format:
-	_'/order hotel\\* FIRSTNAME LASTNAME EMAIL TELEGRAM\\*'_
+    _'/register hotel\\* FIRSTNAME LASTNAME EMAIL\\* TELEGRAM\\*'_
 
 Here are several examples:
-	_'/order hotel John Smith johnsmith@gmail\\.com johnsmith'_
-	_'/order John Smith johnsmith@gmail\\.com'_
-
-**Code Details:**
-
-If you would like to get the code of a certain guest, send a message with the following format:
-	_'/code GUESTEMAIL'_
-
-An example is given on the following line:
-	_'/code johnsmith@gmail\\.com'_
+    _'/order hotel John Smith johnsmith@gmail\\.com johnsmith'_
+    _'/order John Smith johnsmith@gmail\\.com'_
 
 **Payment Details:**
 
 If you would like to get the code of a certain guest, send a message with the following format:
-	_'/payment GUESTCODE AMOUNT CARD/CASH/COUPON'_
+    _'/payment GUESTCODE AMOUNT CARD/CASH/COUPON'_
 
 An example is given on the following line:
-	_'/payment DJWH 40USD CASH'_
+    _'/payment DJWH 40USD CASH'_
+
+**Code Details:**
+
+If you would like to get the code of a certain guest, send a message with the following format:
+    _'/code GUESTEMAIL'_
+
+An example is given on the following line:
+    _'/code johnsmith@gmail\\.com'_
+
+**Outstanding Details:**
+
+If you would like to view a guest's outstanding balance, send a message with the following format:
+    _'/outstanding GUESTCODE'_
+
+
+**Open Details:**
+
+If you would like to see all open orders, send the following message:
+    _'/open'_
+
+**Close Details:**
+
+If you would like to close an order, send a message with the following format:
+    _'/close ID'_
 
 	",
 		parse_mode:'MarkdownV2'
@@ -221,7 +243,7 @@ fn (mut bot TelegramBot) order_command (mut command Command) {
 		)
 		println("ERROR User: $bot.current_user - Sent order command with the following errors: \n$errors_text")
 	} else {
-		product_orders := bot.print_product_orders() or {
+		product_orders := bot.print_product_orders(order) or {
 			_ := bot.bot.send_message(
 				chat_id: bot.chat_id,
 				text: "Failed to get product orders, please try again later",
@@ -243,9 +265,9 @@ Please confirm your order by sending yes
 	}
 }
 
-fn (bot TelegramBot)print_product_orders() !string {
+fn (bot TelegramBot)print_product_orders(order hoteldb.Order) !string {
 	mut text := ''
-	for product_order in bot.sessions[bot.current_user].order.product_orders {
+	for product_order in order.product_orders {
 		text += "${bot.hotel.db.get_product(product_order.product_code)!.name} x ${product_order.quantity}\n"
 	}
 	return text
@@ -353,11 +375,10 @@ fn (mut bot TelegramBot) payment_command (mut command Command) {
 		println("FAILURE User: $bot.current_user - Sent payment command with too few args")
 		return
 	}
-
 	amount := bot.hotel.db.currencies.amount_get(command.args[1]) or {
 		_ := bot.bot.send_message(
 			chat_id: bot.chat_id,
-			text: "Please ensure your inputted amount has both a value and currency denomination'",
+			text: "Please ensure your inputted amount has both a value and currency denomination",
 			parse_mode:'MarkdownV2'
 		)
 		println("FAILURE User: $bot.current_user - Sent payment command with invalid amount and following errors: $err")
@@ -404,6 +425,14 @@ fn (mut bot TelegramBot) payment_command (mut command Command) {
 	bot.hotel.set_db() or {
 		println("SYSTEM FAILURE - Failed to set db")
 	}
+
+	_ := bot.bot.send_message(
+		chat_id: bot.chat_id,
+		text: "Successfully sent payment of ${amount.val.str().replace('.','\\.')}${amount.currency.name}
+		",
+		parse_mode:'MarkdownV2'
+	)
+	println("Successfully took guest payment of ${amount.val}${amount.currency.name}")
 
 }
 

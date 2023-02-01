@@ -71,6 +71,7 @@ fn (db HotelDB) read_guest_folder (mut guest Guest) !Guest {
 	folder_path_string := os.dir(@FILE) + '/../../data/guests/${guest.code}_${guest.firstname.replace(' ','')}_${guest.lastname.replace(' ','')}'
 	mut folder_path := pathlib.get(folder_path_string)
 	file_paths := folder_path.list(pathlib.ListArgs{}) or {return error("Failed to list guest files: $err")}
+	mut id_count := 0
 	for file_path in file_paths {
 		lines_ := os.read_lines(file_path.path) or {return error("Failed to read lines of guest file: $err")}
 		lines := lines_.filter(it != '')
@@ -86,11 +87,20 @@ fn (db HotelDB) read_guest_folder (mut guest Guest) !Guest {
 			minute: date_parts[4].int()
 			second: date_parts[5].int()
 		}
+
+		status := match lines[0].fields()[4] {
+			'closed' {Status.closed}
+			'open' {Status.open}
+			'cancelled' {Status.cancelled}
+			else {Status.cancelled}
+		}
+
 		mut order := Order {
+			id: (db.generate_order_id().int()+id_count).str()
 			guest_code: guest.code
 			employee_id: lines[0].fields()[3]
 			order_time: time_of
-			status: .closed
+			status: status
 		}
 		
 		mut amounts := []finance.Amount{}
@@ -131,6 +141,7 @@ fn (db HotelDB) read_guest_folder (mut guest Guest) !Guest {
 			guest.orders << order
 			order.price.val = -order.price.val
 			guest.wallet = finance.add_amounts([guest.wallet, order.price]) or {return error("Failed to add amounts: $err")}
+			id_count += 1
 		}
  		
 		
@@ -240,13 +251,14 @@ fn (mut db HotelDB) charge_guest(mut order Order) ! {
 	guest.wallet = finance.add_amounts([guest.wallet, order.price]) or {return error("Failed to add amounts: $err")}
 	guest.orders << order
 	db.guests << guest
+	db.log_charge(order, guest) or {return error("Failed to log charge")}
 }
 
 fn (mut db HotelDB) log_charge (order Order, guest Guest) ! {
 	mut log_message := "" 
 	for product_order in order.product_orders {
 		product := db.get_product(product_order.product_code)!
-		log_message += '$product_order.product_code $product_order.quantity ${product.price.val}${product.price.currency.name} $order.employee_id $product.name\n'
+		log_message += '$product_order.product_code $product_order.quantity ${product.price.val}${product.price.currency.name} $order.employee_id $order.status $product.name\n'
 	} 
 	guest.write_to_file(log_message)!
 }

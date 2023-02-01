@@ -67,6 +67,9 @@ pub fn (currencies Currencies) amount_get (amount_ string) !Amount {
 		}
 	}
 	// remove spaces from code and capitalise
+	if code == '' {
+		return error("No currency code given")
+	}
 
 	mut code_nice := match code {
 		'$', '' {'USD'}
