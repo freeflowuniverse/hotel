@@ -1,47 +1,57 @@
-module Kitchen
+module kitchen
+
+import library.common
+
+// todo clarify how non-base products ie dishes are stored when leftover etx
 
 struct Kitchen {
+	id string
 	employee_ids []string
 	storage_id  string // The idea here is to have your menu defined by contents of supply
-	foods      []Food
+	products     []common.Product
+	ingredients  []common.Product
+	orders       map[string]common.Order
+	transactions map[string]common.Transaction
 }
 
-struct Order {
-	id            string
-	product_code  string
-	quantity      string
-	note          string
-	table         string
-	employee_id   string // employee who performed the order
-}
 
-struct Food {
-	id      string
-	name    string
-	ingredients  []IngredientAmount
-	prep_time  time.Time
-}
+// Expose Order
+// takes in an order (digitally from guest or from employee) and prompts employees to prepare and serve a drink
+// TO USER
+fn (mut kitchen Kitchen) expose_order (order common.Order) ! {}
 
-struct Ingredient { // taken from storage product
-	id string
-	name string
-}
+// Confirm order completion
+// FROM USER
+fn (mut kitchen Kitchen) confirm_order_completion (order common.Order) ! {}
 
-struct IngredientAmount {
-	ingredient  Ingredient
-	amount   Amount
-}
+// Log product consumption
+// informs storage that certain ProductAmounts have been consumed
+// INTERNAL
+fn (mut kitchen Kitchen) log_product_consumption () ! {}
 
-struct Amount {
-	number  f64
-	unit    Unit
-}
+// Charge guest
+// after an order is received this is sent to the guest reducing their funds
+// INTERNAL
+fn (mut kitchen Kitchen) charge_guest (transaction common.Transaction) ! {}
 
-enum Unit {
-	ml
-	grams
-	pieces
-	cups
-	tsp
-	tbsp
-}
+// Send funds to accountant
+// sends the funds from an order directly to the accountant
+// INTERNAL
+fn (mut kitchen Kitchen) send_funds_to_accountant (transaction common.Transaction) ! {}
+
+// Add product
+// can be used to add both ingredients and drinks
+// FROM USER
+fn (mut kitchen Kitchen) add_product () ! {}
+
+// Expose production requestion
+// todo Should this be logged?
+// TO USER
+fn (mut kitchen Kitchen) expose_production_request () ! {}
+
+// Log production
+// log the creation of a certain complex product through consumption of base products
+// this might be used when making something to be frozen and used in the future
+// FROM USER
+fn (mut kitchen Kitchen) log_production () ! {}
+

@@ -6,9 +6,10 @@ import library
 
 struct Accounting {
 mut:
-	registers      []Register
-	digital_funds  []library.Price
-	transactions   []Transaction // only refers to in/out of hotel
+	id string // TODO default all ideas to a general function that generates a new id
+	registers      map[string]Register  // string is id
+	digital_funds  map[string]library.Price // string is currency code
+	transactions   map[string]Transaction // only refers to in/out of hotel  // string is id
 }
 
 struct Transaction {

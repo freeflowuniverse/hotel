@@ -1,1 +1,5 @@
 module spa
+
+struct Spa {
+	
+}

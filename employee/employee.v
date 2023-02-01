@@ -9,7 +9,7 @@ person.Person
 mut:
 	title   string
 	actor_id  string
-	shifts []Shift
+	shifts map[string]Shift // string is id
 	working bool
 	holidays_remaining int
 }
@@ -24,7 +24,7 @@ struct Shift {
 // send work schedule
 // employees can call this function to see their work schedule for the upcoming week/month etc
 // FROM USER
-fn (employee Employee) send_work_schedule () ! {}
+fn (employee Employee) get_work_schedule () ! {}
 
 // check if on shift
 // allows an internal system to see if this employee is currently working

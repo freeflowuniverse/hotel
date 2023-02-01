@@ -29,7 +29,7 @@ fn (mut accounting Accounting) add_funds_to_person(recipient_id string, amount l
 
 // ? Why did this return a transaction again?
 // Deduct funds from person
-// deducts funds from a specific guest
+// deducts funds from a specific guest (not charging a guest, instead giving their )
 // Called by:
 // ${interface}.deduct_funds_from_person(employee_id string, amount library.Price)
 // Calls:
@@ -65,7 +65,7 @@ fn (mut accounting Accounting) report_external_payment_status (employee_id strin
 // Check cash register
 // prompts someone to check the cash registry
 // TO USER
-fn (mut accounting Accounting) check_cash_register(register_id string) ! {
+fn (mut accounting Accounting) expose_check_cash_register(register_id string) ! {
 }
 
 // Update register status
@@ -77,6 +77,7 @@ fn (mut accounting Accounting) update_cash_register_status(register_id string) !
 // Get physical funds
 // Getter function to return the physical funds contained by the actor
 // INTERNAL
+// ! I think this is not necessary as all cash will go through one place
 fn (accounting Accounting) get_physical_funds() {
 }
 

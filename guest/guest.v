@@ -2,13 +2,15 @@ module guest
 
 import library.person
 import library.common
-import time
-import library.restaurant
+import freeflowuniverse.crystallib.params
+
+import json
 
 struct Guest {
-RestaurantRequests
 person.Person
-	confirmed_orders  []common.Order
+mut:
+	orders  map[string]common.Order // string is id
+	assistance_requests map[string]common.AssistanceRequest  // string is id
 }
 
 // struct RestaurantRequests{}
@@ -54,12 +56,13 @@ Send Methods:
 // should receive a Transaction message in return
 fn (guest Guest) order (order common.Order) ! {}
 
-fn (guest Guest) expose_order_confirmation (params Params) ! {
+fn (guest Guest) expose_order_completed (params params.Params) ! {
 	
-	order := common.params_to_order(params)
+	// order := common.params_to_order(params)
+	// encoded_confirmation := params.get('order_confirmation')
+	// confirmation := json.decode(common.Order, encoded_confirmation)!
 
-	encoded_confirmation := params.get('order_confirmation')
-	confirmation := json.decode(common.Order, encoded_confirmation)!
+	confirmation := json.decode(common.Order, params.get('order'))
 
 	guest.confirmed_orders << confirmation
 	// TODO send off params
@@ -69,7 +72,7 @@ fn (guest Guest) expose_order_confirmation (params Params) ! {
 
 // request confirmation
 // should receive an AssistanceRequest in return
-fn (guest Guest) request_assistance (request AssistanceRequest) ! {}
+fn (guest Guest) request_assistance (request common.AssistanceRequest) ! {}
 
 // get info
 // should receive ProductCatalogue in return 

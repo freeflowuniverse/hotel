@@ -24,14 +24,25 @@ pub enum ProductState{
 	error
 }
 
+pub struct ProductTag {
+	name string
+}
+
 // goods/services defined with a price, details and standard unit
 pub struct Product {
-    product_id string // two digit number
+    id string // two digit number
     name string
 	description string
     state ProductState
     price library.Price
     unit Unit
+	tags []ProductTag
+	constituent_products []ProductAmount
+}
+
+pub struct ProductAmount {
+	product_code string // actor_character product_id concatenated
+	quantity string
 }
 
 // Message
@@ -45,10 +56,11 @@ enum MessageType {
 
 pub struct Message {
 	id string
+	target_actor_id string
 	subject string
 	description string
-	sender string
-	receiver []string
+	sender string // todo are these necessary?
+	receiver []string // todo are these necessary?
 	message_type MessageType
 }
 
@@ -62,6 +74,7 @@ pub struct AssistanceRequest {
 	by_latest time.Time
 	response bool = false
 	additional_attributes []Attributes
+	completed bool
 }
 
 

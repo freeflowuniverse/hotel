@@ -12,13 +12,12 @@ enum Method {
 pub struct Order {
 	id string
 	guest_id string // ? is this necessary? isnt it covered in the actionjob
-	product_code string // actor_character product_id concatenated
     start time.Time
-    quantity int
+	product_amounts []ProductAmount
 	note string
 	method Method
-	response bool = false
 	additional_attributes []Attribute
+	completed bool
 }
 
 // need to define a serializer for each order type

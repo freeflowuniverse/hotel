@@ -117,4 +117,12 @@ library
 
 # expose functions
 
-all functions that begin with the phrase expose are designed to send a message to the user
+all functions that begin with the phrase expose are designed to send a message to the user.
+
+// Todo should add confirm keyword to represent the confirmation of completion of a digital request in the real world
+
+# Employees
+
+There is no direct connection between employees and roles, instead, there needs to be an authentication list that allows certain employees to call functions of certain actors and also every action needs to be logged with the employee id
+
+# Address Books for external payments, external activities etc.

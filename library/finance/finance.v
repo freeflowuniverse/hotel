@@ -39,10 +39,12 @@ pub enum TransactionMedium {
 // purely financial transaction from a sender to receiver with full detail
 pub struct Transaction {
 mut:
+	id string
 	sender string // TODO define more precisely what this represents
 	receiver string // TODO define more precisely what this represents
-	total_amount library.Price
+	total_amount Price
 	medium TransactionMedium
 	bank_transfer_details BankTransferDetails
 	note string
+	completed bool
 }
