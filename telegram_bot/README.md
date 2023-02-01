@@ -121,3 +121,6 @@ Quantity definition per product:
 - food/drinks - number of units
 - rooms - number of nights
 - boats - number of hours
+
+
+products have a parameter called variability
