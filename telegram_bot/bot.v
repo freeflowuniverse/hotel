@@ -21,10 +21,21 @@ pub mut:
 	username string
 	order hoteldb.Order
 	start_date time.Time // so that old sessions can be deleted
-	confirmation bool
+	order_confirmation bool
+	register_guest bool
 	user_status hoteldb.PersonStatus
+	new_guest NewGuest
 }
 
+struct NewGuest {
+mut:
+	firstname string
+	lastname string
+	telegram_username string
+	email string
+	hotel_resident bool
+	resident_checked bool
+}
 
 pub fn new_bot (bot_token string, hotel_name string, hotel_db_path_string string) !TelegramBot {
 	return TelegramBot{
@@ -33,19 +44,21 @@ pub fn new_bot (bot_token string, hotel_name string, hotel_db_path_string string
 	}
 }
 
-// pub fn (mut bot TelegramBot) clear_updates () {
-// 	updates := bot.bot.get_updates(offset: 100)
-// }
-
 pub fn (mut bot TelegramBot) launch_bot () ! {
 	// spawn running_display()
 	mut updates := []vgram.Update{}
-	mut last_offset := 0
+	mut last_offset := 1
+	updates = bot.bot.get_updates(timeout: 0, allowed_updates: json.encode(["message", "poll_answer"]), offset: last_offset, limit: 100)
+	for update in updates {
+		if last_offset < update.update_id {
+			last_offset = update.update_id
+		}
+	}
 	for {
 		updates = bot.bot.get_updates(timeout: 0, allowed_updates: json.encode(["message", "poll_answer"]), offset: last_offset, limit: 100)
 		for update in updates {
 			if last_offset < update.update_id {
-                last_offset = update.update_id
+				last_offset = update.update_id
 				bot.parse_cli_update(update)
 			}
 		}

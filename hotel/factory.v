@@ -72,7 +72,6 @@ pub fn (mut hotel Hotel) write_guests () ! {
 	
 	mut guests_string := ''
 	for guest in hotel.db.guests {
-		println(guest)
 		guests_string += "!!guest
  code: '$guest.code'
  firstname: '$guest.firstname'

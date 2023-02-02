@@ -1,6 +1,7 @@
 module hoteldb
 
 import time
+import os
 
 import freeflowuniverse.hotel.finance
 
@@ -48,8 +49,6 @@ pub fn (mut db HotelDB) input_order (mut order Order) ! {
 	order.order_time = time.now()
 	order.id = db.generate_order_id()
 
-	// todo move logging of order to after order is confirmed not before
-
 	db.charge_guest(mut order)!
 } 
 
@@ -61,12 +60,19 @@ pub fn (db HotelDB) get_open_orders () !string {
 	}
 	mut orders_string := 'OPEN ORDERS:\n'
 	for order in open_orders {
+		println("cli_time: ${typeof(order.order_time).name}")
+		println(time.now())
+		println("Relative: " + order.order_time.relative())
 		mut order_string := '
 ID: $order.id
-Ordered: ${order.order_time.relative().replace('.','MM')}
+Ordered: ${order.order_time.relative()}
 '
 		for product_order in order.product_orders {
-			order_string += ' \\- ${db.get_product(product_order.product_code)!.name} x $product_order.quantity\n'
+			order_string += ' \\- ${db.get_product(product_order.product_code)!.name} x $product_order.quantity'
+			if product_order.note != '' {
+				order_string += ' \\- Note: ${product_order.note.replace('.', '\\.')}'
+			}
+			order_string += '\n'
 		}
 		order_string += '\n'
 		orders_string += order_string
@@ -83,13 +89,19 @@ pub fn (mut db HotelDB) close_order (order_id string) ! {
 			println("db order id: '$order.id'")
 			println(typeof(order.id).name)
 			if order.id == order_id {
-				db.log_charge(order, guest)!
+				delete_open_order_log(guest, order.order_time) or {return error("Failed to delete file: $err")}
 				order.status = .closed
+				db.log_charge(order, guest)!
 				return
 			}
 		}
 	}
 	return error("Could not find order in db")
+}
+
+fn delete_open_order_log(guest Guest, order_time time.Time) ! {
+	time_string := order_time.str().replace(' ', '_').replace(':', '_').replace('-', '_')
+	os.rm(os.dir(@FILE) + '/../../data/guests/${guest.code}_${guest.firstname.replace(' ','')}_${guest.lastname.replace(' ','')}/${time_string}.txt')!
 }
 
 fn (db HotelDB) generate_order_id () string {
