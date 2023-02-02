@@ -1,16 +1,5 @@
-# hotel
-
-# TODOs
-- add logging to bot behaviour
-- deal with offset
-
-## Bot Behaviour
-
-- '/start' or '/help', - an introduction and help sheet
-- '/menu', - all food and drink
-- '/food', - all food
-- '/drinks' - all drinks
-- '/rooms' - all rooms
-- '/boats' - all boats
-- '/order {product_code} {quantity}' - confirm with user the correct product and quantity using poll
-- anything else - refer to '/start' or '/help'
+# hotel TODOs
+- ensure payments are inputted in same format as orders
+- do full testing with Timur
+- calculate wallet when reading from files
+- make sure that authentication is done already

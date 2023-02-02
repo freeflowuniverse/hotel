@@ -1,0 +1,17 @@
+# Binaries for programs and plugins
+main
+hotel_backend
+*.exe
+*.exe~
+*.so
+*.dylib
+*.dll
+
+# Ignore common editor/system specific metadata
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# non-standard
+.env

@@ -1,20 +1,37 @@
 module main
 
-import hotel	
+import freeflowuniverse.hotel.telegram_bot
+
 import os
 
 const (
-	bot_token = "5971743256:AAGLiLi8zrvW2D6--zt-t7xY0PC7Ee9hrqk"
-	memdb_source_path = os.dir(@FILE) + '/data/products'
+	memdb_add_path = os.dir(@FILE) + '/data/data_add'
+	memdb_source_path = os.dir(@FILE) + '/data/data_main/'
 )
 
 fn do() ! {
-	mut hotel := hotel.new('Jungle Paradise', bot_token)
-	hotel.generate_db(memdb_source_path) or {return error("Failed to generate db for hotel: \n$err")}
-	hotel.launch_bot()!
+	// spawn telegram_bot.running_display()
+	
+	bot_token := get_env_token('BOT_TOKEN') or {panic("Failed to get bot token: $err")}
+	mut bot := telegram_bot.new_bot(bot_token, 'Jungle Paradise', memdb_source_path) or {panic("Failed to create new bot: $err")}
+
+	// bot.hotel.add_md_data(memdb_add_path) or {panic("Failed to add data from md files: $err")}
+
+	// println(bot.hotel)
+
+	bot.launch_bot()!
 }
 
 fn main(){
 	do() or {panic(err)}
 }
 
+pub fn get_env_token(token_name string) !string {
+	env_secrets := os.read_lines("${os.dir(@FILE)}/.env")!
+	for env_secret in env_secrets {
+		if env_secret.split('"')[0].trim_string_right("=") == token_name {
+			return env_secret.split('"')[1]
+		}
+	}
+	return error("Failed to find $token_name in .env")
+}
