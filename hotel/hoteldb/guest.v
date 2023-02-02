@@ -8,6 +8,7 @@ import rand
 import os
 import time
 
+// todo make sure payment commands can be read without issue, need to make sure that they have a closed attribute
 // todo check error where after registration a guest is deleted from guests.md
 
 [heap]
@@ -41,7 +42,7 @@ pub fn (mut db HotelDB) add_guest (mut guest Guest) !string {
 	if guest.email != '' {
 		for old_guest in db.guests {
 			if guest.email == old_guest.email {
-				return "!$old_guest.code"
+				return error("!$old_guest.code")
 			}
 		}
 	}	

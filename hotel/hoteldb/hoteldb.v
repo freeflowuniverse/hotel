@@ -4,6 +4,9 @@ import freeflowuniverse.crystallib.pathlib {Path}
 import freeflowuniverse.crystallib.actionparser
 import freeflowuniverse.hotel.finance
 
+// todo clear data_add after added
+// todo make sure there is @ in email
+
 import os
 
 const purchase_log_path = os.dir(@FILE) + '/purchase_log.txt'
