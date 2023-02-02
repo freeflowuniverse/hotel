@@ -8,6 +8,7 @@ pub struct Allergen {
 	name    	 string
 }
 
+//allergens is what people can't have
 pub struct ConsumableMixin{
 pub mut:
 	calories        int
