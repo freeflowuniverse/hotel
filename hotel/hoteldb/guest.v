@@ -25,6 +25,20 @@ pub mut:
 	hotel_resident    bool
 }
 
+pub struct Payment {
+	employee_id string
+	guest_code string
+	amount finance.Amount
+	medium Medium
+	time_of time.Time
+}
+
+pub enum Medium {
+	card
+	cash
+	coupon
+}
+
 // pub fn (mut db HotelDB) get_bill (guest_code string) string {}
 
 pub fn (mut db HotelDB) get_guest_code (guest_email string) !Guest {
@@ -214,19 +228,6 @@ pub fn (db HotelDB) guest_exists (code string) bool {
 	return false
 }
 
-pub struct Payment {
-	employee_id string
-	guest_code string
-	amount finance.Amount
-	medium Medium
-	time_of time.Time
-}
-
-pub enum Medium {
-	card
-	cash
-	coupon
-}
 
 // only accessible by employees
 pub fn (mut db HotelDB) take_guest_payment (p Payment) ! {

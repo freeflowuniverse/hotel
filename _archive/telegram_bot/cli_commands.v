@@ -18,6 +18,7 @@ pub mut:
 // TODOS 
 // todo kitchen should get notified of a new order immediately
 // todo add cancel order feature
+// todo allow employees to login to a customer code
 
 fn (bot TelegramBot) send (msg string) {
 	_ := bot.bot.send_message(

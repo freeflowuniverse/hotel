@@ -1,7 +1,7 @@
 module hoteldb
 
 import freeflowuniverse.crystallib.pathlib {Path}
-import freeflowuniverse.crystallib.actionparser
+import freeflowuniverse.baobab.actions
 import freeflowuniverse.hotel.finance
 
 // todo clear data_add after added
@@ -18,11 +18,11 @@ pub mut:
 	guests   []Guest
 	employees []Employee
 	currencies finance.Currencies
-	action_parser actionparser.ActionsParser
+	action_parser actions.ActionsManager
 }
 
 struct FailedAction {
-	action   actionparser.Action
+	action   actions.Action
 	error    string
 }
 
@@ -40,12 +40,11 @@ pub fn (mut db HotelDB) add_md_data (mut dir_path Path) ! {
 }
 
 fn (mut db HotelDB) process (file_path Path) ! {
-	mut ap := actionparser.get()
-	ap.file_parse(file_path.path) or {return error("Failed to parse action directory: $err")}
+	mut am := actions.file_parse(file_path.path) or {return error("Failed to parse action directory: $err")}
 
 	mut failed_actions := []FailedAction{}
 
-	for mut action in ap.actions {
+	for mut action in am.actions {
 		match action.name.split('.')[0] {
 			'product' {db.params_to_product(mut action.params) or {failed_actions << FailedAction{action, "Identified as product but failed to add: $err"}}}
 			'guest' {db.params_to_guest(mut action.params) or {failed_actions << FailedAction{action, "Identified as guest but failed to add: $err"}}}

@@ -1,6 +1,6 @@
 module main
 
-import freeflowuniverse.hotel.telegram_bot
+import freeflowuniverse.hotel.new_bot
 
 import os
 
@@ -13,13 +13,13 @@ fn do() ! {
 	// spawn telegram_bot.running_display()
 	
 	bot_token := get_env_token('BOT_TOKEN') or {panic("Failed to get bot token: $err")}
-	mut bot := telegram_bot.new_bot(bot_token, 'Jungle Paradise', memdb_source_path) or {panic("Failed to create new bot: $err")}
+	mut bot := new_bot.new_bot(bot_token, 'Jungle Paradise', memdb_source_path) or {panic("Failed to create new bot: $err")}
 
 	// bot.hotel.add_md_data(memdb_add_path) or {panic("Failed to add data from md files: $err")}
 
 	// println(bot.hotel)
 
-	bot.launch_bot()!
+	bot.get_telegram_updates()
 }
 
 fn main(){
