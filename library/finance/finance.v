@@ -48,3 +48,9 @@ mut:
 	note string
 	completed bool
 }
+
+pub fn multiply (price Price, number int) Price {
+	new_price := price
+	new_price.val = price.val*number
+	return new_price
+}

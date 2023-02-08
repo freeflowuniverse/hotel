@@ -13,7 +13,7 @@ struct Person {
 	date_of_birth     time.Time
 	allergies         []string
 	preferred_contact string
-	digital_funds     []library.Price
+	digital_funds     library.Price //todo make sure there is only currency for digital funds ie dollars
 }
 
 pub struct MoneyReceipt {

@@ -9,8 +9,9 @@ import json
 struct Guest {
 person.Person
 mut:
-	orders  map[string]common.Order // string is id
+	orders  map[string]common.Order // string is id of order
 	assistance_requests map[string]common.AssistanceRequest  // string is id
+	code    string
 }
 
 // struct RestaurantRequests{}
@@ -52,9 +53,8 @@ Send Methods:
 	- most actors 
 */
 
-// order product
-// should receive a Transaction message in return
-fn (guest Guest) order (order common.Order) ! {}
+
+
 
 fn (guest Guest) expose_order_completed (params params.Params) ! {
 	
@@ -74,8 +74,3 @@ fn (guest Guest) expose_order_completed (params params.Params) ! {
 // should receive an AssistanceRequest in return
 fn (guest Guest) request_assistance (request common.AssistanceRequest) ! {}
 
-// get info
-// should receive ProductCatalogue in return 
-fn (guest Guest) get_product_catalogue (request CatalogueRequest) ! {}
-
-// need to create an expose_info_response but one for each possible response

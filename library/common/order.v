@@ -11,13 +11,14 @@ enum Method {
 // an exchange of goods or services with specific magnitude defined
 pub struct Order {
 	id string
-	guest_id string // ? is this necessary? isnt it covered in the actionjob
+	orderer_id string // ? is this necessary? isnt it covered in the actionjob
     start time.Time
 	product_amounts []ProductAmount
 	note string
 	method Method
 	additional_attributes []Attribute
 	completed bool
+	target_actor string
 }
 
 // need to define a serializer for each order type

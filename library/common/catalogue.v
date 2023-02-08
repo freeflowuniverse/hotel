@@ -86,3 +86,17 @@ pub fn params_to_order (o params.Params) common.Order {
 
 	return order
 }
+
+pub fn simple_catalogue_request (product_codes []string) map[string]CatalogueRequest {
+	mut requests := map[string]CatalogueRequest{}
+	for code in product_codes {
+		actor_char := code[0].ascii_str()
+		if actor_char !in requests.keys {
+			requests[actor_char] = CatalogueRequest{}
+		}
+		requests[actor_char].products << ProductAvailability{
+			id: code[0..(code.len)]
+		}
+	}
+	return requests
+}

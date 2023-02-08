@@ -34,15 +34,17 @@ pub struct Product {
     name string
 	description string
     state ProductState
-    price library.Price
+    price library.finance.Price
     unit Unit
 	tags []ProductTag
 	constituent_products []ProductAmount
+	variable_price bool
 }
 
 pub struct ProductAmount {
-	product_code string // actor_character product_id concatenated
+	product Product // actor_character product_id concatenated
 	quantity string
+	total_price library.finance.Price
 }
 
 // Message
