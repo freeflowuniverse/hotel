@@ -1,5 +1,7 @@
 module finance
 
+import time
+
 // TODO move out of hotel
 
 pub struct Currencies {
@@ -33,6 +35,7 @@ pub enum TransactionMedium {
 	complimentary
 	cash
 	card
+	coupon
 	bank_transfer
 }
 
@@ -47,6 +50,8 @@ mut:
 	bank_transfer_details BankTransferDetails
 	note string
 	completed bool
+	time_of time.Time
+	target_actor string
 }
 
 pub fn multiply (price Price, number int) Price {

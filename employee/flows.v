@@ -7,11 +7,11 @@ import freeflowuniverse.baobab.jobs { ActionJob }
 
 import time
 
+// todo will need to introduct state into guest actor to record channel type for certain jobs which wait for a response ie cancel_order
 
 // ? for now it seems difficult to modify a product order
 // it seems better to simply cancel an order and then resubmit, you will still need to go through the paces anyway.
-fn (mut actor GuestActor) order_product_flow (job ActionJob) {
-
+fn (mut actor EmployeeActor) order_guest_product_flow (job ActionJob) {
 	user_id := job.args.get('user_id')
 	channel_type := job.args.get('channel_type')
 
@@ -19,13 +19,19 @@ fn (mut actor GuestActor) order_product_flow (job ActionJob) {
 
 	mut order := common.Order{}
 
-	order.for_id = actor.get_guest_from_telegram(flow.user_id).code
-	order.orderer_id = actor.get_guest_from_telegram(flow.user_id).code
+	order.orderer_id = actor.get_employee_from_telegram(flow.user_id).code
 	
 	if order.orderer_id == '' {
-		ui.send_exit_message("Please register your telegram username at the reception.")
+		ui.send_exit_message("This functionality is only available to employees.")
 		return
 	}
+
+	order.guest_code = ui.ask_string(
+		question: "What is the guest's four letter code?"
+		validation: actor.validate_guest_code
+		)
+
+	order.for_id = guest_code
  
 	mut another_product := true
 
@@ -77,57 +83,87 @@ fn (mut actor GuestActor) order_product_flow (job ActionJob) {
 }
 
 
-pub fn (actor GuestActor) get_code_flow (job ActionJob) {
+pub fn (actor EmployeeActor) get_guest_code_flow (job ActionJob) {
+
+	mut employee_id := actor.get_employee_from_telegram(flow.user_id).id
+	
+	if employee_id == '' {
+		ui.send_exit_message("This functionality is only available to employees.")
+		return
+	}
 
 	user_id := job.args.get('user_id')
 	channel_type := job.args.get('channel_type')
 
 	ui := ui.new(channel_type, user_id)
+	
+	firstname := ui.ask_string(
+		question: "What is the guest's firstname?"
+		)
+	lastname := ui.ask_string(
+		question: "What is the guest's lastname?"
+		)
+	email := ui.ask_string( // ? Should this be ask_email?
+		question: "What is the guest's email?"
+		validation: common.validate_email
+	) 
 
-	mut guest_code := actor.get_guest_from_telegram(ui.user_id).code
-
-	if guest_code == '' {
-		ui.send_exit_message("Please request an employee to assist you with your code. If you also register your telegram username with the employee, you will be able to access it here.")
-		return
-	} else {
-		ui.send_exit_message("Your Guest Code is: $guest_code")
+	guest_code := actor.get_guest_code(firstname, lastname, email) or {
+		ui.send_exit_message("A guest with those details could not be found.")
 	}
-
+	ui.send_exit_message("$firstname $lastname's code is $guest_code")
 }
 
-pub fn (actor GuestActor) view_outstanding_flow (job ActionJob) {
-
+pub fn (actor GuestActor) guest_outstanding_flow (job ActionJob) {
 	user_id := job.args.get('user_id')
 	channel_type := job.args.get('channel_type')
 
 	ui := ui.new(channel_type, user_id)
 
-	mut guest := actor.get_guest_from_telegram(ui.user_id)
-
-	if guest.code == '' {
-		ui.send_exit_message("Please request an employee to assist you with your outstanding balance. If you also register your telegram username with the employee, you will be able to access it here.")
+	mut employee_id := actor.get_employee_from_telegram(flow.user_id).id
+	
+	if employee_id == '' {
+		ui.send_exit_message("This functionality is only available to employees.")
 		return
 	}
 
-	balance := guest.digital_funds
-	ui.send_exit_message("Your outstanding balance is: ${balance.val}${balance.currency.name}.")
+	guest_code := ui.ask_string(
+		question: "What is the guest's four letter code?"
+		validation: actor.validate_guest_code
+		)
+
+	mut guest_balance := actor.get_guest_balance(guest_code)!
+
+	ui.send_exit_message("The guest's outstanding balance is: ${balance.val}${balance.currency.name}.")
 }
 
 pub fn (actor GuestActor) cancel_order_flow (job ActionJob) {
-	
 	user_id := job.args.get('user_id')
 	channel_type := job.args.get('channel_type')
-
+	
 	ui := ui.new(channel_type, user_id)
 
-	mut guest := actor.get_guest_from_telegram(ui.user_id)
+	mut employee := actor.get_employee_from_telegram(ui.user_id)
 	
-	if guest.code == '' {
-		ui.send_exit_message("Please register your telegram username at the reception.")
+	if employee_id == '' {
+		ui.send_exit_message("This functionality is only available to employees.")
 		return
 	}
 
-	active_orders := actor.guests[guest_code].orders.filter(it.status=.open)
+	guest_code := ui.ask_string(
+		question: "What is the guest's four letter code?"
+		validation: actor.validate_guest_code
+	)
+
+	active_orders := map[string]common.Order{}
+
+	for employee in actor.employees {
+		for order in employee.guest_orders {
+			if order.for_id == guest_code && order.status = .open {
+				active_orders << order
+			}
+		}
+	}
 
 	mut order_strings := []string{}
 
@@ -153,7 +189,7 @@ pub fn (actor GuestActor) cancel_order_flow (job ActionJob) {
 		return
 	}
 
-	actor.cancel_order_internal(active_orders[target_order_id])
+	actor.cancel_order(active_orders[target_order_id])
 
 	ui.send_exit_message("A cancel request has been made. We will get back to you shortly on whether your order can still be cancelled.")
 

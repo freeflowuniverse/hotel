@@ -185,7 +185,7 @@ pub fn (mut flow HotelFlow) get_code () {
 			)
 		guest.email = actor.flow.ui.ask_string( // ? Should this be ask_email?
 			question: "What is the guest's email?"
-			validation: guest.validate_email
+			validation: common.validate_email
 		) 
 
 		guest_code = // ! hotel.db.get_guest_code(guest)

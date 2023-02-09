@@ -16,20 +16,11 @@ struct Person {
 	digital_funds     library.Price //todo make sure there is only currency for digital funds ie dollars
 }
 
-pub struct MoneyReceipt {
-	subject     string
-	sender      string // actor_id.instance_id (instance_id is optional)
-	recipient   string // actor_id.instance_id (instance_id is optional)
-	amount      library.Price
-	description string
-	time        time.Time
-	employee_id string
-}
 
-fn (mut person Person) add_digital_funds(amount library.Price) ! {
+// fn (mut person Person) add_digital_funds(amount library.Price) ! {
 
-}
+// }
 
-fn (mut person Person) deduct_digital_funds(amount library.Price) {
+// fn (mut person Person) deduct_digital_funds(amount library.Price) {
 	
-}
+// }

@@ -80,3 +80,12 @@ pub struct AssistanceRequest {
 }
 
 
+pub fn validate_email(email_ string) bool {
+	if email.contains('@') == false || email.contains('.') == false {
+		return false
+	}
+	if email.split('@')[1].split('.')[0].len < 2 {
+		return false
+	}
+	return true
+}

@@ -11,8 +11,9 @@ enum Method {
 // an exchange of goods or services with specific magnitude defined
 pub struct Order {
 	id string
+	for_id string
 	orderer_id string // ? is this necessary? isnt it covered in the actionjob
-    start time.Time
+    start time.Time // desired time for order to arrive or for booking to start
 	product_amounts []ProductAmount
 	note string
 	method Method
@@ -20,6 +21,18 @@ pub struct Order {
 	completed bool
 	target_actor string
 }
+
+// todo completed needs to be changed to status
+
+/*
+enum OrderStatus {
+	open
+	started
+	finished
+	cancelled
+}
+
+*/
 
 // need to define a serializer for each order type
 
@@ -29,44 +42,22 @@ pub struct Attribute {
 	value_type string //bool, int, f64
 }
 
-// needs to convert an order into params
-pub fn order_to_params (order Order) params.Params {
-	mut order_params := params.new_params()
-	order_params.kwarg_add('id', order.id)
-	order_params.kwarg_add('guest_id', order.guest_id)
-	order_params.kwarg_add('product_code', order.product_code)
-	order_params.kwarg_add('start', order.start.unix_time.str())
-	order_params.kwarg_add('quantity', order.quantity.str())
-	order_params.kwarg_add('note', order.note)
 
-	order_params.kwarg_add('method', '$order.method')
-	order_params.kwarg_add('response', order.response.str())
-	order_params.kwarg_add('additional_attributes', json.encode(order.additional_attributes))
-	return order_params
-}
-
-pub fn params_to_order (o params.Params) Order {
-	method := match o.get('method')! {
-		'create' {Method.create}
-		'modify' {Method.modify}
-		'delete' {Method.delete}
-		else {Method.create}
+fn (order Order) stringify() string {
+	mut ordstr := 'Order ID: $order.id\nTime: $order.start\n'
+	if order.note != '' {
+		ordstr += 'Note: $order.note\n'
 	}
-
-	mut response := false
-	if o.get('response')! == 'true' { response = true }
-
-	mut order := Order {
-		id: o.get('id')!
-		guest_id: o.get('guest_id')!
-		product_code: o.get('product_code')! // actor_character product_id concatenated
-		start: unix(o.get('start')!.f64())
-		quantity: o.get('quantity')!.str()
-		note: o.get('note')!
-		method: method
-		response: response
-		additional_attributes: json.decode([]Attribute, o.get('additional_attributes'))
+	if order.additional_attributes.len != 0 {
+		ordstr += 'Additional Attributes:\n\n'
+		for attr in order.additional_attributes {
+			ordstr += '${attr.key.capitalize()}: $attr.value\n'
+		}
 	}
-
-	return order
+	ordstr += '\nProducts:\n\n'
+	for pa in order.product_amounts {
+		ordstr += '$pa.quantity x pa.product.name\n'
+	}
+	return ordstr
+	
 }

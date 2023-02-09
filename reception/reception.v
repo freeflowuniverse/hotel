@@ -7,8 +7,6 @@ struct Reception {
 	complaints map[string]common.Message
 }
 
-
-
 // Create Guest
 // creates a new guest
 // FROM USESR

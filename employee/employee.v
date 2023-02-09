@@ -1,6 +1,7 @@
 module employee
 
-import library.person
+import freeflowuniverse.hotel.library.person
+import freeflowuniverse.hotel.library.common
 
 import time
 
@@ -12,6 +13,7 @@ mut:
 	shifts map[string]Shift // string is id
 	working bool
 	holidays_remaining int
+	guest_orders map[string]common.Order
 }
 
 struct Shift {
