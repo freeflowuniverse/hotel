@@ -4,6 +4,7 @@ import time
 import library
 
 struct Person {
+mut:
 	id                string // ? Should this be the main unique identifier or should employees and guests also have unique identifiers?
 	firstname         string
 	lastname          string

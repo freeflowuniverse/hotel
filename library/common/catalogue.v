@@ -1,5 +1,8 @@
 module common
 
+import freeflowuniverse.baobab.client
+
+import json
 
 // CATALOGUE REQUEST
 
@@ -44,16 +47,40 @@ pub struct CatalogueRequest {
 	// TODO other filters
 }
 
-pub fn simple_catalogue_request (product_codes []string) map[string]CatalogueRequest {
-	mut requests := map[string]CatalogueRequest{}
-	for code in product_codes {
-		actor_char := code[0].ascii_str()
-		if actor_char !in requests.keys {
-			requests[actor_char] = CatalogueRequest{}
-		}
-		requests[actor_char].products << ProductAvailability{
-			id: code[0..(code.len)]
-		}
+fn get_product (product_id string, actor_name string, baobab client.Client) !ProductAvailability {
+
+	request := CatalogueRequest{
+		products: [ProductAvailability{
+			id: product_id
+		}]
 	}
-	return requests
+	
+	j_args := params.Params{}
+	j_args.kwarg_add('catalogue_request', json.encode(request))
+	job := baobab.job_new(
+		action: 'hotel.${actor_name}.get_catalogue'
+		args: j_args
+	)!
+
+	response := baobab.job_schedule_wait(job, 100)!
+
+	if response.state == .error {
+		return error
+	}
+	return response.result.get('catalogue').products[0]
 }
+
+
+// ! pub fn simple_catalogue_request (product_codes []string) map[string]CatalogueRequest {
+// 	mut requests := map[string]CatalogueRequest{}
+// 	for code in product_codes {
+// 		actor_char := code[0].ascii_str()
+// 		if actor_char !in requests.keys {
+// 			requests[actor_char] = CatalogueRequest{}
+// 		}
+// 		requests[actor_char].products << ProductAvailability{
+// 			id: code[0..(code.len)]
+// 		}
+// 	}
+// 	return requests
+// }

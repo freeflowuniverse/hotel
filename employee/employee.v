@@ -9,7 +9,7 @@ pub struct Employee {
 person.Person
 mut:
 	title   string
-	actor_id  string
+	actor_ids  []string
 	shifts map[string]Shift // string is id
 	working bool
 	holidays_remaining int

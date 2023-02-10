@@ -2,6 +2,7 @@ module guest
 
 import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.hotel.library.common
+import freeflowuniverse.hotel.library.person
 
 import json
 
@@ -21,26 +22,18 @@ pub fn (mut actor EmployeeActor) execute (mut job ActionJob) ! {
 		eprintln('active employee..')
 		println(job)
 	}
-	// used to initialize gitstructure by default
-	// if git init action isn't the first job
 
 	actionname := job.action.split('.').last()
 
-	// todo need to decide whether to decode job here or later
-	// todo ie do we need to convert job into user_id and channel_type now or make a function to do it at the beginning of every flow
-
 	match actionname {
-		'order_guest_product' {
-			actor.order_guest_product_flow(job)!
+		'guest_order' {
+			actor.guest_order(mut job)
 		}
-		'view_guest_outstanding' {
-			actor.guest_outstanding_flow(job)!
-		}
-		'get_guest_code' {
-			actor.get_guest_code_flow(job)!
-		}
-		'help' {
-			actor.help_flow(job)!
+		'get_employee_from_telegram' {
+			actor.get_employee_from_telegram(mut job)
+		} 
+		'cancel_guest_order' {
+			actor.cancel_guest_order(mut job)
 		}
 		else {
 			error('could not find employee action for job:\n${job}')
@@ -56,133 +49,73 @@ pub fn (actor EmployeeActor) add_new_employee ()
 
 // TO OTHER ACTORS
 
-// get info
-fn (actor EmployeeActor) get_product_catalogues (requests map[string]common.CatalogueRequest) !map[string]common.CatalogueRequest {
-	for request 
-	// todo match the key (actor_char) with the appropriate actor
-	// todo for each request create a job with the catalogue_request 
-	// todo wait for responses 
-}
+// ! not needed yet
+// // get info
+// fn (actor EmployeeActor) get_product_catalogues (requests map[string]common.CatalogueRequest) !map[string]common.CatalogueRequest {
+// 	for request 
+// 	// todo match the key (actor_char) with the appropriate actor
+// 	// todo for each request create a job with the catalogue_request 
+// 	// todo wait for responses 
+// }
 
-// todo need to create an expose_info_response but one for each possible response
 
 // order product
 // should receive a Transaction message in return
-fn (actor EmployeeActor) guest_order (order common.Order) ! {
-	orders := map[string]common.Order{}
-	for p_amount in order.product_amounts {
-		actor_char := p_amount.product.id[0].ascii_str()
-		if actor_char !in orders.keys {
-			orders[actor_char] = CatalogueRequest{}
-		}
-		orders[actor_char].product_amounts << p_amount
-	}
-	
-	for actor_char, order in orders {
-		order.target_actor = match actor_char {
-			'R' {'restaurant'} //todo the rest of the character
-			else {'other'}
-		}
-		// todo create job for order
-		// todo send orders to appropriate actors
+fn (actor EmployeeActor) guest_order (mut job ActionJob) ! {
+	order := json.decode(common.Order, job.args.get('order'))
+	// ? should the full order be logged or the constituent parts logged?
+
+	success_orders, failure_orders := common.forward_order(order, 'hotel.guest.order', actor.baobab)!
+
+	job.state = .done
+	job.result.kwarg_add('success_orders', success_orders)
+	job.result.kwarg_add('failure_orders', failure_orders)
+	actor.baobab.job_schedule(job) // todo should this be wait?
+	for order in success_orders {
 		actor.employees[order.orderer_id].guest_orders[order.id] = order
-		// todo send order to guestactor so that they can log it
-	}	
+	}
 }
 
-fn (actor EmployeeActor) cancel_guest_order (order common.Order) ! {
+fn (actor EmployeeActor) cancel_guest_order (mut job ActionJob) ! {
+	order := json.decode(common.Order, job.args.get('order'))
+
 	for employee in actor.employees {
 		if order.id in employee.guest_orders.keys() {
 			employee.guest_orders[order.id].status = .cancel
 		}
 	}
-	
-	j_args := params.Params{}
 
-	j_args.kwarg_add('order', json.encode(order))
+	action := 'hotel.guest.cancel_order'
 
-	job := actor.baobab.job_new(
-		action: 'hotel.guest.cancel_order' //todo
-		args: j_args
-	)!
-
+	if common.cancel_order(order, action, actor.baobab) {
+		job.state = .done
+	} else {
+		job.state = .error
+	}
 	actor.baobab.schedule_job(job, 0)!
+	// todo pass this guid to guest actor to wait for a response
 }
 
+fn (actor EmployeeActor) get_employee_from_telegram (job ActionJob) {
+	telegram_username := job.args.get('telegram_username')
 
-
-fn (actor EmployeeActor) get_guest_code (firstname string, lastname string, email string) !string {
-
-	j_args := params.Params{}
-
-	j_args.kwarg_add('firstname', firstname)
-	j_args.kwarg_add('lastname', lastname)
-	j_args.kwarg_add('email', email)
-
-	job := actor.baobab.job_new(
-		action: 'hotel.guest.get_guest_code' //todo
-		args: j_args
-	)!
-
-	response := actor.baobab.schedule_job_wait(job, 0)!
-	if response.args.exists('guest_code'){
-		return response.args.get('guest_code')
-	} else {
-		return error("Guest does not exist")
+	mut found := false 
+	for employee in actor.employees {
+		if employee.telegram_username == telegram_username {
+			job.result.kwarg_add('employee', employee.Person)
+			found = true
+		}
 	}
-}
-
-fn (actor EmployeeActor) validate_guest_code(guest_code string) !bool {
-
-	j_args := params.Params{}
-
-	j_args.kwarg_add('guest_code', guest_code)
-
-	job := actor.baobab.job_new(
-		action: 'hotel.guest.validate_guest_code' //todo
-		args: j_args
-	)!
-
-	response := actor.baobab.schedule_job_wait(job, 0)!
-	if response.args.get('guest_code') == 'true' {
-		return true
-	} else {
-		return false
+	if found == false {
+		job.state = .error
 	}
+	actor.baobab.job_schedule(job)!
 }
 
-fn (actor EmployeeActor) get_guest_balance (guest_code string) !Price {
-
-	j_args := params.Params{}
-
-	j_args.kwarg_add('guest_code', guest_code)
-
-	job := actor.baobab.job_new(
-		action: 'hotel.guest.get_guest_balance' //todo
-		args: j_args
-	)!
-
-	response := actor.baobab.schedule_job_wait(job, 0)!
-
-	if respone.args.get('found') == 'true'{
-		return response.args.get('balance')
-	} else {
-		return error("Guest balance not found")
-	}
-	
-}
 
 // UTILITY FUNCTIONS
 
-fn (actor EmployeeActor) get_employee_from_telegram (telegram_username string) Employee {
-	for employee in actor.employees {
-		if employee.telegram_username == telegram_username {
-			return employee
-		}
-	}
-	return Employee{}
-}
-
+//! Deprecated I think
 // todo maybe turn this into get_products?
 fn (actor EmployeeActor) get_product (requests map[string]common.CatalogueRequest) !Product {
 	catalogues := actor.get_product_catalogues(requests)!

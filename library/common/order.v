@@ -1,5 +1,8 @@
 module common
 
+import json
+import freeflowuniverse.baobab.client
+
 // ORDER
 
 enum Method {
@@ -20,6 +23,7 @@ pub struct Order {
 	additional_attributes []Attribute
 	completed bool
 	target_actor string
+	canceller_id string
 }
 
 // todo completed needs to be changed to status
@@ -31,7 +35,6 @@ enum OrderStatus {
 	finished
 	cancelled
 }
-
 */
 
 // need to define a serializer for each order type
@@ -59,5 +62,35 @@ fn (order Order) stringify() string {
 		ordstr += '$pa.quantity x pa.product.name\n'
 	}
 	return ordstr
+}
+
+// ! Changing this to return success_orders and failure_orders
+fn forward_order (order Order, action string, baobab client.Client) !([]Order, []Order) {
+	j_args := params.Params{}
+	j_args.kwarg_add('order', json.encode(order))
+	job := baobab.job_new(
+		action: action
+		args: j_args
+	)!
+	response := baobab.job_schedule_wait(job, 100)!
+	if response.state == .error {
+		return error("Failed to make orders")
+	}
+	successes := response.result.get('success_orders')
+	failures := response.result.get('failure_orders')
+
+	return successes, failures
+}
+
+fn  cancel_order (order common.Order, action string, baobab client.Client) !bool {
 	
+	j_args := params.Params{}
+	j_args.kwarg_add('order', json.encode(ordes))
+
+	job := actor.baobab.job_new(
+		action: action
+		args: j_args
+	)!
+
+	baobab.schedule_job(job, 0)!
 }
