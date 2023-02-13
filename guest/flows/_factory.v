@@ -1,4 +1,4 @@
-module guest
+module flows
 
 import freeflowuniverse.crystallib.ui
 import freeflowuniverse.hotel.library.common

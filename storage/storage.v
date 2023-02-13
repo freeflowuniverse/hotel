@@ -1,19 +1,21 @@
 module storage
 
-import library.common
+import freeflowuniverse.hotel.library.product
+import freeflowuniverse.hotel.library.common
+
 import time
 
 struct Storage {
 	id string
 	name string
-	supplies []ProductAmount
+	supplies []product.ProductAmount
 	inventory_checks []InventoryCheck
 	serve_order  []ServeOrder
 	delivery_order []DeliveryOrder
 }
 
 struct ProductSupply{
-common.ProductAmount
+product.ProductAmount
 mut:
 	safe_minimum string //quantity
 	maximum string
@@ -21,7 +23,7 @@ mut:
 
 
 struct InventoryCheck {
-	product_amounts []ProductAmount
+	product_amounts []product.ProductAmount
 	date    time.Time
 	employee_id  string
 }
@@ -64,12 +66,12 @@ fn (storage Storage) confirm_product_serve () ! {}
 // set safe minimum
 // allows the supply manager to set a reasonable lower limit for product store
 // FROM USER
-fn (storage Storage) set_safe_minimum (product_amounts []common.ProductAmount) ! {}
+fn (storage Storage) set_safe_minimum (product_amounts []product.ProductAmount) ! {}
 
 // set safe minimum
 // allows the supply manager to set a reasonable lower limit for product store
 // FROM USER
-fn (storage Storage) set_safe_minimum (product_amounts []common.ProductAmount) ! {}
+fn (storage Storage) set_safe_minimum (product_amounts []product.ProductAmount) ! {}
 
 // send external payment request
 // sends a request to the accountant to transfer funds to an external party

@@ -1,10 +1,12 @@
 module concierge
 
-import library.common
+import freeflowuniverse.hotel.library.product
+import freeflowuniverse.hotel.library.common
+
 
 struct Concierge {
 	id string
-	external_activities []common.Product
+	external_activities []product.Product
 	guest_orders []common.Order
 }
 

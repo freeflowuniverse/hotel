@@ -42,6 +42,9 @@ pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
 		'add_guest' {
 			actor.add_guest(mut job)
 		}
+		'get_guest_orders' {
+			actor.get_guest_orders(mut job)
+		}
 		// todo 
 		'receive_funds' {
 			actor.receive_funds(mut job)
@@ -49,7 +52,7 @@ pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
 		'order' { // todo 
 			actor.order(mut job)
 		}
-		// 'confirm_cancelled_order'
+		// todo 'confirm_cancelled_order'
 		else {
 			error('could not find guest action for job:\n${job}')
 			return

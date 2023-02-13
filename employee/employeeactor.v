@@ -3,6 +3,8 @@ module guest
 import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.hotel.library.person
+import freeflowuniverse.hotel.library.product
+
 
 import json
 
@@ -117,7 +119,7 @@ fn (actor EmployeeActor) get_employee_from_telegram (job ActionJob) {
 
 //! Deprecated I think
 // todo maybe turn this into get_products?
-fn (actor EmployeeActor) get_product (requests map[string]common.CatalogueRequest) !Product {
+fn (actor EmployeeActor) get_product (requests map[string]common.CatalogueRequest) !prdouct.Product {
 	catalogues := actor.get_product_catalogues(requests)!
 
 	product_availability := catalogues[catalogues.keys()[0]]

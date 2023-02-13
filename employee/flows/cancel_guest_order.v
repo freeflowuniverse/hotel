@@ -1,23 +1,25 @@
 module flows
 
-pub fn (actor EmployeeFlows) cancel_order (job ActionJob) {
+import freeflowuniverse.hotel.library.common
+import freeflowuniverse.crystallib.ui
+import freelowuinverse.hotel.library.flow_methods
+
+pub fn (flows EmployeeFlows) cancel_guest_order (job ActionJob) {
 	user_id := job.args.get('user_id')
 	channel_type := job.args.get('channel_type')
 	ui := ui.new(channel_type, user_id)
 
-	mut employee := actor.get_employee_from_telegram(ui.user_id)
-	
-	if employee_id == '' {
-		ui.send_exit_message("This functionality is only available to employees.")
+	mut employee_person := flow_methods.get_employee_person_from_handle(user_id, channel_type, flows.baobab) or {
+		ui.send_exit_message("Failed to get employee identity from $channel_type username. Please try again later.")
 		return
 	}
 
 	guest_code := ui.ask_string(
 		question: "What is the guest's four letter code?"
-		validation: flows.validate_guest_code
+		validation: flow_methods.validate_guest_code
 	)
 
-	active_orders := flows.get_guest_orders(guest_code)
+	active_orders := flow_methods.get_guest_orders(guest_code, flows.baobab).filter(it.status=.open)
 
 	mut order_strings := []string{}
 	orders_order := map[string]string{}
@@ -35,7 +37,6 @@ pub fn (actor EmployeeFlows) cancel_order (job ActionJob) {
 	)
 	target_order_id := orders_order[choice]
 
-
 	confirmation := ui.ask_yesno("Are you sure you want to delete this order?")
 
 	if confirmation == false {
@@ -45,7 +46,7 @@ pub fn (actor EmployeeFlows) cancel_order (job ActionJob) {
 	
 	action := 'hotel.employee.cancel_guest_order'
 
-	if common.cancel_order(active_orders[target_order_id], action, flows.baobab)! == true {
+	if common.forward_order_cancellation(active_orders[target_order_id], action, flows.baobab)! == true {
 		ui.send_exit_message("A cancel request has been made. We will get back to you shortly on whether your order can still be cancelled.")
 	} else {
 		ui.send_exit_message("Failed to submit cancel request. Please try again later")

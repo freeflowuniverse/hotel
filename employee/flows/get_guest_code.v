@@ -6,13 +6,7 @@ pub fn (flows EmployeeFlows) get_guest_code (job ActionJob) {
 	channel_type := job.args.get('channel_type')
 	ui := ui.new(channel_type, user_id)
 
-
-	mut response := flows.get_employee_from_telegram(user_id)
-	if response.state == .error{
-		ui.send_exit_message("Failed to get employee identity from telegram username. Please try again later.")
-		return
-	}
-	employee_id := response.args.get('employee').id
+	// ? Do we want to log this?
 	
 	// ! validation has already occured at the flow supervisor actor, but maybe still useful
 	//  if employee_id == '' {

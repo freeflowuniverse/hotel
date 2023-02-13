@@ -1,6 +1,8 @@
 module kitchen
 
-import library.common
+import freeflowuniverse.hotel.library.product
+import freeflowuniverse.hotel.library.common
+
 
 // todo clarify how non-base products ie dishes are stored when leftover etx
 
@@ -8,8 +10,8 @@ struct Kitchen {
 	id string
 	employee_ids []string
 	storage_id  string // The idea here is to have your menu defined by contents of supply
-	products     []common.Product
-	ingredients  []common.Product
+	products     []product.Product
+	ingredients  []product.Product
 	orders       map[string]common.Order
 	transactions map[string]common.Transaction
 }

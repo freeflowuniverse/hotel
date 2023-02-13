@@ -34,8 +34,8 @@ fn (mut flows EmployeeFlows) execute (actionname string, job ActionJob) {
 		'order_guest_product' {
 			flows.order_guest_product(job)!
 		}
-		'cancel_order' {
-			flows.cancel_order
+		'cancel_guest_order' {
+			flows.cancel_guest_order
 		}
 		'view_guest_outstanding' {
 			flows.guest_outstanding(job)!

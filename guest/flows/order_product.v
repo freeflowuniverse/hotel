@@ -1,5 +1,10 @@
 module flows
 
+import freeflowuniverse.hotel.library.flow_methods
+import freeflowuniverse.hotel.library.product
+import freeflowuniverse.hotel.library.common
+
+
 
 // ? for now it seems difficult to modify a product order
 // it seems better to simply cancel an order and then resubmit, you will still need to go through the paces anyway.
@@ -11,8 +16,8 @@ fn (mut actor GuestFlows) order_product (job ActionJob) {
 	ui := ui.new(channel_type, user_id)
 	mut order := common.Order{}
 
-	mut guest_code := flows.get_guest_code_from_telegram(user_id) or {
-		ui.send_exit_message("Failed to get guest identity from telegram username. Please try again later.")
+	guest_code := flows.get_guest_code_from_handle(user_id, channel_type) or {
+		ui.send_exit_message("Failed to get guest identity from $channel_type username: $user_id. Please try again later.")
 		return
 	}
 
@@ -22,13 +27,13 @@ fn (mut actor GuestFlows) order_product (job ActionJob) {
 	mut another_product := true
 	product_loop: for another_product {
 
-		mut product_amount := common.ProductAmount{}
+		mut product_amount := product.ProductAmount{}
 
 		product_code := ui.ask_string(
 			question: "What is the product code?"
 			validation: flows.validate_product_code // TODO
 		)
-
+		
 		product_amount.quantity = ui.ask_string(
 			question: "What quantity of this product do you want?"
 			validation: fn (quantity string) bool {
@@ -71,7 +76,7 @@ fn (mut actor GuestFlows) order_product (job ActionJob) {
 		order.start = time.now()
 	}
 
-	if common.forward_order([order], 'hotel.guest.order', flows.baobab)! == true {
+	if common.forward_order(order, 'hotel.guest.order', flows.baobab)! == true {
 		ui.send_exit_message("Your order has been successfully placed.")
 	} else {
 		ui.send_exit_message("Your order failed. Please try again later")

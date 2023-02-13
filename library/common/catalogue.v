@@ -1,13 +1,14 @@
 module common
 
 import freeflowuniverse.baobab.client
+import freeflowuniverse.hotel.library.product
 
 import json
 
 // CATALOGUE REQUEST
 
 struct ProductAvailability {
-Product
+product.Product
 	available_slots []Slot
 	available bool = true
 }

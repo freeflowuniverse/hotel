@@ -7,33 +7,12 @@ struct Reception {
 	complaints map[string]common.Message
 }
 
-// Create Guest
-// creates a new guest
-// FROM USESR
-fn (reception Reception) create_guest () ! {
-	
+struct GuestRegistration {
+	register_employee_id string
+	guest_code string
+	check_in time.Time
+	check_in_employee_id string
+	check_out time.Time
+	check_out_employee_id string
 }
 
-// Check in guest
-// FROM USER
-fn (reception Reception) check_in_guest () ! {
-	
-}
-
-// Check out guest
-// FROM USER OR INTERNAL
-fn (reception Reception) check_out_guest () ! {
-	
-}
-
-// Respond to complaint
-// FROM USER
-fn (reception Reception) respond_to_complaint () ! {
-
-}
-
-// Expose complaint
-// TO USER
-fn (mut reception Reception) expose_complaint () ! {
-
-}

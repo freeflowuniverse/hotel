@@ -1,6 +1,6 @@
 module bar
 
-import library.common
+import freeflowuniverse.hotel.library.product
 
 // todo lots of actors have extra info such as opening hours notices etc
 // todo we need to somehow accomodate for this, maybe with messages?
@@ -9,8 +9,8 @@ struct Bar {
 	id string
 	employee_ids []string
 	storage_id   string // The idea here is to have your menu defined by contents of supply
-	products     []common.Product
-	ingredients  []common.Product
+	products     []product.Product
+	ingredients  []product.Product
 	orders       map[string]common.Order
 	transactions map[string]common.Transaction
 	// todo add opening hours + notices section maybe information/notices map[string]Message where string is topic

@@ -2,6 +2,8 @@ module common
 
 import json
 import freeflowuniverse.baobab.client
+import freeflowuniverse.hotel.library.product
+
 
 // ORDER
 
@@ -17,7 +19,7 @@ pub struct Order {
 	for_id string
 	orderer_id string // ? is this necessary? isnt it covered in the actionjob
     start time.Time // desired time for order to arrive or for booking to start
-	product_amounts []ProductAmount
+	product_amounts []product.ProductAmount
 	note string
 	method Method
 	additional_attributes []Attribute
@@ -64,7 +66,6 @@ fn (order Order) stringify() string {
 	return ordstr
 }
 
-// ! Changing this to return success_orders and failure_orders
 fn forward_order (order Order, action string, baobab client.Client) !([]Order, []Order) {
 	j_args := params.Params{}
 	j_args.kwarg_add('order', json.encode(order))
@@ -74,7 +75,7 @@ fn forward_order (order Order, action string, baobab client.Client) !([]Order, [
 	)!
 	response := baobab.job_schedule_wait(job, 100)!
 	if response.state == .error {
-		return error("Failed to make orders")
+		return error("Failed to place order")
 	}
 	successes := response.result.get('success_orders')
 	failures := response.result.get('failure_orders')
@@ -82,15 +83,22 @@ fn forward_order (order Order, action string, baobab client.Client) !([]Order, [
 	return successes, failures
 }
 
-fn  cancel_order (order common.Order, action string, baobab client.Client) !bool {
+fn forward_order_cancellation (order common.Order, action string, baobab client.Client) !string {
 	
 	j_args := params.Params{}
-	j_args.kwarg_add('order', json.encode(ordes))
-
+	j_args.kwarg_add('order', json.encode(order))
 	job := actor.baobab.job_new(
 		action: action
 		args: j_args
 	)!
 
-	baobab.schedule_job(job, 0)!
+	response := baobab.schedule_job_wait(job, 100)!
+
+	if response.state == .done {
+		return job.guid
+	} else {
+		return error("Failed to submit cancellation request")
+	}
 }
+
+// todo function to return cancel_order

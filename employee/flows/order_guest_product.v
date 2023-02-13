@@ -2,6 +2,9 @@ module flows
 
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.baobab.jobs {ActionJob}
+import freelowuinverse.hotel.library.flow_methods
+import freeflowuniverse.hotel.library.product
+
 
 // ? for now it seems difficult to modify a product order
 // it seems better to simply cancel an order and then resubmit, you will still need to go through the paces anyway.
@@ -14,8 +17,8 @@ fn (mut flows EmployeeFlows) order_guest_product (job ActionJob) {
 	mut order := common.Order{}
 
 	// get employee id
-	mut employee_person := flows.get_employee_from_telegram(user_id) or {
-		ui.send_exit_message("Failed to get employee identity from telegram username. Please try again later.")
+	mut employee_person := flow_methods.get_employee_person_from_handle(user_id, channel_type, flows.baobab) or {
+		ui.send_exit_message("Failed to get employee identity from $channel_type username. Please try again later.")
 		return
 	}
 	order.orderer_id = employee_person.id
@@ -23,7 +26,7 @@ fn (mut flows EmployeeFlows) order_guest_product (job ActionJob) {
 	// get and validate guest code
 	order.guest_code = ui.ask_string(
 		question: "What is the guest's four letter code?"
-		validation: flows.validate_guest_code
+		validation: flow_methods.validate_guest_code
 	)	
 	order.for_id = guest_code
 
@@ -31,7 +34,7 @@ fn (mut flows EmployeeFlows) order_guest_product (job ActionJob) {
 	mut another_product := true
 	product_loop: for another_product {
 
-		mut product_amount := common.ProductAmount{}
+		mut product_amount := product.ProductAmount{}
 
 		product_code := ui.ask_string(
 			question: "What is the product code?"
