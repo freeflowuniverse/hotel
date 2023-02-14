@@ -65,22 +65,5 @@ fn (actor ReceptionActor) register_guest (guest person.Person, employee_id strin
 	return error("Failed to add guest")
 }
 
-fn (actor ReceptionActor) send_funds (transaction finance.Transaction) ! {
-	
-	j_args := params.Params{}
 
-	j_args.kwarg_add('transaction', json.encode(transaction))
 
-	job := actor.baobab.job_new(
-		action: 'hotel.${transaction.actor_target}.receive_funds' //todo
-		args: j_args
-	)!
-
-	response := actor.baobab.job_schedule_wait(job, 0)!
-
-	if response.state == .error {
-		return error("Failed to send funds")
-	}
-	transaction.completed = true
-	actor.guest_payments << transaction
-}

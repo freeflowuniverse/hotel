@@ -2,7 +2,9 @@ module common
 
 import freeflowuniverse.baobab.client
 import freeflowuniverse.hotel.library.product
+import freeflowuniverse.crystallib.params
 
+import time
 import json
 
 // CATALOGUE REQUEST
@@ -27,13 +29,13 @@ struct BoolFilter {
 	desired bool
 }
 
-struct NumberFilter {
+struct DiscreteFilter {
 	name string
 	start f64
 	end f64
 }
 
-struct DateFilter {
+struct ContinuousFilter {
 	name string
 	start time.Time
 	end time.Time
@@ -48,27 +50,43 @@ pub struct CatalogueRequest {
 	// TODO other filters
 }
 
-fn get_product (product_id string, actor_name string, baobab client.Client) !ProductAvailability {
+fn get_product(product_id string, actor_name string, mut baobab client.Client) !ProductAvailability {
+	catalogue_response := get_catalogue([product_id], actor_name, mut baobab)!
+	return catalogue_response.products[0]
+}
 
-	request := CatalogueRequest{
-		products: [ProductAvailability{
+fn get_catalogue (product_ids []string, actor_name string, mut baobab client.Client) !CatalogueRequest {
+
+	mut j_args := params.Params{}
+
+	mut request := CatalogueRequest{}
+	
+	for id in product_ids {
+		request.products << ProductAvailability{
 			id: product_id
-		}]
+		}
 	}
 	
-	j_args := params.Params{}
+	mut everything := false
+	if product_ids.len == 0 {
+		everything = true
+	}
+
+	j_args.kwarg_add('everything', '$everything')
 	j_args.kwarg_add('catalogue_request', json.encode(request))
-	job := baobab.job_new(
-		action: 'hotel.${actor_name}.get_catalogue'
+	mut job := baobab.job_new(
+		action: 'hotel.${actor_name}.send_catalogue'
 		args: j_args
 	)!
 
-	response := baobab.job_schedule_wait(job, 100)!
+	response := baobab.job_schedule_wait(mut job, 100)!
 
 	if response.state == .error {
-		return error
+		return error("Failed to get product")
 	}
-	return response.result.get('catalogue').products[0]
+
+	catalogue := response.result.get('catalogue')!
+	return json.decode(CatalogueRequest, catalogue)!
 }
 
 

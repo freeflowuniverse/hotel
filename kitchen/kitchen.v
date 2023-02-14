@@ -8,12 +8,9 @@ import freeflowuniverse.hotel.library.common
 
 struct Kitchen {
 	id string
-	employee_ids []string
 	storage_id  string // The idea here is to have your menu defined by contents of supply
 	products     []product.Product
 	ingredients  []product.Product
-	orders       map[string]common.Order
-	transactions map[string]common.Transaction
 }
 
 

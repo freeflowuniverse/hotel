@@ -5,9 +5,11 @@ import freeflowuniverse.baobab.client
 import freeflowuniverse.hotel.reception
 import freeflowuniverse.hotel.kitchen
 import freeflowuniverse.hotel.bar
+import freeflowuniverse.hotel.library.flow_methods { ViewCatalogueMixin }
 
 
 struct EmployeeFlows {
+ViewCatalogueMixin
 	baobab: client.Client
 }
 

@@ -12,7 +12,7 @@ fn (flows GuestFlows) get_guest_code_from_handle (user_id string, channel_type s
 	j_args.kwarg_add('user_id', user_id)
 	j_args.kwarg_add('channel_type', channel_type)
 	job := flows.baobab.job_new(
-		action: 'hotel.guest.get_guest_code_from_handle'
+		action: 'hotel.guest.send_guest_code_from_handle'
 		args: j_args
 	)!
 	response := flows.baobab.job_schedule_wait(job, 100)!

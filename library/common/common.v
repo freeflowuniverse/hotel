@@ -1,8 +1,6 @@
 module common
 
 import time
-import freeflowuniverse.hotel.library.finance
-import freeflowuniverse.crystallib.params
 
 // Message
 
@@ -31,13 +29,19 @@ pub struct AssistanceRequest {
 	issue_subject string
 	description string
 	by_latest time.Time
-	response bool = false
-	additional_attributes []Attributes
-	completed bool
+	response bool
+	additional_attributes []Attribute
+	request_status RequestStatus
+}
+
+pub enum RequestStatus {
+	open
+	closed
+	cancelled
 }
 
 
-pub fn validate_email(email_ string) bool {
+pub fn validate_email(email string) bool {
 	if email.contains('@') == false || email.contains('.') == false {
 		return false
 	}

@@ -5,8 +5,8 @@ import freeflowuniverse.hotel.guest.flows as guest
 import freeflowuniverse.hotel.employee.flows as employee
 import freeflowuniverse.baobab.jobs { ActionJob }
 
-struct FlowActor {
-	id string
+struct FlowsActor {
+	name string = 'hotel.flowsactor'
 	references []PersonReference
 	baobab client.Client
 }
@@ -35,6 +35,9 @@ pub fn (mut actor FlowActor) execute (mut job ActionJob) ! {
 	}
 	// used to initialize gitstructure by default
 	// if git init action isn't the first job
+
+	// todo check that this is from an interface
+	// todo if yes, the below, else some other means for example order cancellation confirmation
 
 	user_id := job.args.get('user_id')
 	channel_type := job.args.get('channel_type')

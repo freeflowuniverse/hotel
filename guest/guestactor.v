@@ -16,7 +16,7 @@ import json
 
 pub struct GuestActor {
 	name string = 'hotel.guest'
-	guests map[string]Guest // where string is guest code
+	guests []Guest 
 }
 
 pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
@@ -33,26 +33,30 @@ pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
 		'validate_guest_code' {
 			actor.validate_guest_code(mut job)
 		}
-		'get_guest_code' {
-			actor.get_guest_code(mut job)
+		'send_guest_code_from_details' {
+			actor.send_guest_code_from_details(mut job)
+		} 
+		'send_guest_person' {
+			actor.send_guest_person(mut job)
 		}
-		'get_guest_code_from_telegram' {
-			actor.get_guest_code_from_telegram(mut job)
+		'log_order' {
+			actor.log_order(mut job)
 		}
-		'add_guest' {
-			actor.add_guest(mut job)
+		'log_order_cancellation' {
+			actor.log_order_cancellation(mut job)
 		}
-		'get_guest_orders' {
-			actor.get_guest_orders(mut job)
+		TODO 'send_guest_code_from_handle' {
+			actor.send_guest_code_from_handle(mut job)
 		}
-		// todo 
-		'receive_funds' {
-			actor.receive_funds(mut job)
-		}
-		'order' { // todo 
-			actor.order(mut job)
-		}
-		// todo 'confirm_cancelled_order'
+		// TODO 'add_guest' {
+		// 	actor.add_guest(mut job)
+		// }
+		// TODO 'send_guest_active_orders' {
+		// 	actor.send_guest_active_orders(mut job)
+		// }
+		// TODO 'receive_funds' {
+		// 	actor.receive_funds(mut job)
+		// }
 		else {
 			error('could not find guest action for job:\n${job}')
 			return
@@ -62,139 +66,65 @@ pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
 
 // SUPERVISOR FUNCTIONS
 
-// todo
-pub fn (actor GuestActor) add_guest (job ActionJob) ! {
-	guest := json.decode(job.args.get('guest')) as Guest
+// ! NOT DONE YET // TODO 
+// pub fn (actor GuestActor) add_guest (job ActionJob) ! {
+// 	guest := json.decode(job.args.get('guest')) as Guest
 
-	// todo validate that this guest doesnt exist already
-	for code, guest_ in actor.guests {
-		if guest_.email == guest.email {
-			job.state = .error
-			actor.baobab.job_schedule(job)!
-			return
-		}
-	}
+// 	// todo validate that this guest doesnt exist already
+// 	for code, guest_ in actor.guests {
+// 		if guest_.email == guest.email {
+// 			job.state = .error
+// 			actor.baobab.job_schedule(job)!
+// 			return
+// 		}
+// 	}
 
-	guest.code = generate_guest_code()
-	actor.guests[guest.code] = guest
+// 	guest.code = generate_guest_code()
+// 	actor.guests[guest.code] = guest
 
-	job.result.add_kwarg('guest_code', guest.code)
+// 	job.result.add_kwarg('guest_code', guest.code)
 	
-	actor.baobab.job_schedule(job)!
+// 	actor.baobab.job_schedule(job)!
+// }
+
+fn (actor GuestActor) log_order (mut job ActionJob) {
+	order := json.decode(common.Order, job.args.get('order')!)!
+
+	actor.guests.filter(it.code==order.for_id)[0].orders << order
+
+	mut total_price := Price{
+		val: 0
+		currency: order.product_amounts[0].currency
+	}
+	for p_a in order.product_amounts {
+		total_price.add(p_a.product.price.multiply(p_a.quantity))!
+	} 
+
+	actor.guests.filter(it.code==order.for_id)[0].digital_funds.deduct(total_price)
 }
 
-// TO OTHER ACTORS
+fn (actor GuestActor) log_order_cancellation (mut job ActionJob) {
+	order := json.decode(common.Order, job.args.get('order')!)!
+	vendor_name := job.args.get('vendor_name')!
 
-// get info
-fn (actor GuestActor) get_product_catalogues (requests map[string]common.CatalogueRequest) !map[string]common.CatalogueRequest {
-	mut job_guids := []string{}
-	for key, request in requests {
-		target_actor := match key {
-			'R' {'restaurant'}
-			else {'error'} // todo how to handle this
-		}
-		j_args := params.Params{}
-		j_args.kwarg_add('catalogue', json.encode(request))
+	actor.guests.filter(it.code==order.for_id)[0].orders.filter(it.target_actor==vendor_name&&it.id==order.id)[0].order_status = .cancelled
 
-		job := actor.baobab.job_new(
-			action: 'hotel.${target_actor}.catalogue_request' //todo
-			args: j_args
-		)!
-
-		actor.baobab.schedule_job(job, 0)!
-
-		job_guids << job.guid
+	mut total_price := Price{
+		val: 0
+		currency: order.product_amounts[0].currency
 	}
-	// todo how to make sure this is efficiently returned
-	// todo also how to do error handling
-	mut catalogues := map[string]common.CatalogueRequest{}
-	for guid in job_guids {
-		job := actor.baobab.job_wait(5)
-		catalogues[job.src_action] = job.args.get('catalogue')
-	}
+	for p_a in order.product_amounts {
+		total_price.add(p_a.product.price.multiply(p_a.quantity))!
+	} 
 
-	return catalogues
+	actor.guests.filter(it.code==order.for_id)[0].digital_funds.add(total_price)
 }
 
-// todo need to create an expose_info_response but one for each possible response
 
-// order product
-// should receive a Transaction message in return
-fn (actor GuestActor) order (mut job ActionJob) ! {
-	order := json.decode(common.Order, job.args.get('order'))
-	// todo check enough in balance
-	orders := map[string]common.Order{}
-	for p_amount in order.product_amounts {
-		actor_char := p_amount.product.id[0].ascii_str()
-		if actor_char !in orders.keys {
-			orders[actor_char] = Order{
-				id: actor.generate_order_id()
-			}
-		}
-		orders[actor_char].product_amounts << p_amount
-	}
-	
-	job_guids := []string
-	
-	for actor_char, order in orders {
-		order.target_actor = match actor_char {
-			'K' {'kitchen'}
-			'B' {'bar'}
-			else {'other'}
-		}
-		j_args := params.Params{}
-		j_args.kwarg_add('order', json.encode(order))
-		n_job := actor.baobab.job_new(
-			action: 'hotel.${order.target_actor}.order'
-			args: j_args
-		)!
-		actor.baobab.schedule_job(n_job, 0)!
-		job_guids << n_job.guid
-	}	
-
-	success_orders := []common.Order{}
-	failure_orders := []common.Order{}
-
-	for guid in job_guids {
-		response := actor.job_wait(guid, 10)!
-		if response.state == .done {
-			success_orders << response.args.get('order')
-		} else {
-			failure_orders << response.args.get('order') // todo maybe we wont get this response so instead we should just display successful orders
-		}
-	}
-
-	job.result.kwarg_add('success_orders', success_orders)
-	job.result.kwarg_add('failure_orders', failure_orders)
-	job.state = .done
-	actor.baobab.job_schedule(job)
-
-	for order in success_orders {
-		actor.guests[order.for_id].orders[order.id] = order
-	}
-}
-
-fn (actor GuestActor) cancel_order (mut job ActionJob) ! {
-	order := json.decode(common.Order, job.args.get('order'))
-
-	actor.guests[order.for_id].orders[order.id].status = .cancel	
-
-	action := 'hotel.${order.target_actor}.cancel_order'
-
-	if common.cancel_order(order, action, actor.baobab) {
-		job.state = .done
-	} else {
-		job.state = .error
-	}
-	actor.baobab.schedule(job)!
-	// todo pass this guid to guest actor to wait for a response
-}
-
-// UTILITY FUNCTIONS
-
-fn (actor GuestActor) get_guest_code_from_telegram (job ActionJob) {
+fn (actor GuestActor) send_guest_code_from_handle (job ActionJob) {
 	mut found := false 
-	telegram_username := job.args.get('telegram_username')
+	channel_type := job.args.get('channel_type')!
+	telegram_username := job.args.get('user_id')!
 	for guest in actor.guests {
 		if guest.telegram_username == telegram_username {
 			job.result.kwarg_add('guest_code', guest.code)
@@ -205,19 +135,6 @@ fn (actor GuestActor) get_guest_code_from_telegram (job ActionJob) {
 		job.state = .error
 	}
 	actor.baobab.job_schedule(job)!
-}
-
-//! Deprecated I think
-// todo maybe turn this into get_products?
-fn (actor GuestActor) get_product (requests map[string]common.CatalogueRequest) !Product {
-	catalogues := actor.get_product_catalogues(requests)!
-
-	product_availability := catalogues[catalogues.keys()[0]]
-	if product_availability.available == true {
-		return product_availability.Product
-	} else {
-		return error("Product ${catalogues.keys()[0]}${product_availability.id} unavailable")
-	}
 }
 
 
@@ -237,23 +154,6 @@ fn (actor GuestActor) generate_guest_code () string {
 	return code
 }
 
-fn (actor GuestActor) generate_order_id () string {
-	mut maximum_id := 0
-	for guest in actor.guests {
-		for id, _ in guest.orders {
-			if id.int() > maximum_id {
-				maximum_id = id.int()
-			}
-		}
-	}
-	return maximum_id.str()
-}
-
-
-// TODO QUESTION: some functions need to wait for an immediate response ie getting a catalogue to display to the user, while others ie submitting an order, dont need to wait for a response. In which cases should functions wait for a response as opposed to sending off the job and allowing it to come in naturally?
-
-// FROM OTHER ACTORS
-
 fn (actor GuestActor) validate_guest_code (mut job ActionJob) {
 	guest_code := job.args.get('guest_code')
 	mut valid := false
@@ -262,29 +162,46 @@ fn (actor GuestActor) validate_guest_code (mut job ActionJob) {
 			valid = true
 		}
 	}
-	job.result.kwarg_add('guest_code', '$valid')
-	// todo send job back to employee
+	if valid == true {
+		job.result.kwarg_add('guest_code', '$valid')
+		job.state = .done
+	} else {
+		job.state = .error
+	}
+	
+	actor.baobab.job_schedule(job)!
 }
 
-fn (actor GuestActor) get_guest_code (mut job ActionJob) ! {
-	firstname := job.args.get('firstname')
-	lastname := job.args.get('lastname')
-	email := job.args.get('email')
+fn (actor GuestActor) send_guest_code_from_details (mut job ActionJob) ! {
+	firstname := job.args.get('firstname')!
+	lastname := job.args.get('lastname')!
+	email := job.args.get('email')!
+	mut valid := false
 	for guest in actor.guests {
 		if guest.firstname == firstname && guest.lastname == lastname && guest.email == email {
 			job.result.kwarg_add('guest_code', '$guest.code')
+			job.state = .done
+			valid = true
 		}
 	}
-	// todo send job back to employee
+	if valid != true {
+		job.state = .error
+	}
+	actor.baobab.job_schedule(job)!
 }
 
-fn (actor GuestActor) receive_funds (mut job ActionJob) ! {
-	transaction := job.args.get('transaction')
+fn (actor GuestActor) send_guest_person (mut job ActionJob) ! {
+	guest_code := job.args.get('guest_code')!
+	guest := actor.guests.filter(it.code==guest_code)[0]
+	job.result.kwarg_add('guest_person', guest.Person)
+	job.state = .done
+	actor.baobab.job_schedule(job)!
+}
 
-	actor.guests[transaction.sender]
-	// todo send job back to employee
-
-	//! THIS IS WHERE I AM SO FAR
-
-	// todo I need to resolve the sender, receiver issue ie if a guest adds money to their digital funds are they the sender or receiver?
+fn (actor GuestActor) send_guest_active_orders (mut job ActionJob) ! {
+	guest_code := job.args.get('guest_code')!
+	active_orders := guest := actor.guests.filter(it.code==guest_code)[0].orders.filter(it.order_status==.open)
+	job.result.kwarg_add('active_orders', active_orders)
+	job.state = .done
+	actor.baobab.job_schedule(job)!
 }

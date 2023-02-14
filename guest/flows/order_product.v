@@ -3,8 +3,7 @@ module flows
 import freeflowuniverse.hotel.library.flow_methods
 import freeflowuniverse.hotel.library.product
 import freeflowuniverse.hotel.library.common
-
-
+import freeflowuniverse.crystallib.ui
 
 // ? for now it seems difficult to modify a product order
 // it seems better to simply cancel an order and then resubmit, you will still need to go through the paces anyway.
@@ -31,7 +30,7 @@ fn (mut actor GuestFlows) order_product (job ActionJob) {
 
 		product_code := ui.ask_string(
 			question: "What is the product code?"
-			validation: flows.validate_product_code // TODO
+			validation: flow_methods.validate_product_code // TODO
 		)
 		
 		product_amount.quantity = ui.ask_string(
@@ -47,8 +46,8 @@ fn (mut actor GuestFlows) order_product (job ActionJob) {
 			ui.send_message("That product is not available ")
 			continue product_loop
 		}
-		product_amount.product := product_a.Product
-		product_amount.price = finance.multiply(product_amount.product.price, product_amount.quantity)
+		product_amount.product = product_a.Product
+		product_amount.price = product_amount.product.price.multiply(product_amount.quantity)
 
 		order.product_amounts << product_amount
 
@@ -76,9 +75,15 @@ fn (mut actor GuestFlows) order_product (job ActionJob) {
 		order.start = time.now()
 	}
 
-	if common.forward_order(order, 'hotel.guest.order', flows.baobab)! == true {
+	successes, failures := common.split_send_wait_order(order, flows.baobab)! 
+	if successes.len == 0 {
+		ui.send_exit_message("Failed to place order, please try again later")
+	} else if failures.len == 0 {
 		ui.send_exit_message("Your order has been successfully placed.")
 	} else {
-		ui.send_exit_message("Your order failed. Please try again later")
+		for failure in failures {
+			ui.send_message(failure.stringify())
+		}
+		ui.send_exit_message("The above orders failed to be placed, the rest were successful.")
 	}
 }

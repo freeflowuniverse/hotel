@@ -14,7 +14,7 @@ fn (flows EmployeeFlows) get_guest_code (firstname string, lastname string, emai
 	j_args.kwarg_add('email', email)
 
 	job := flows.baobab.job_new(
-		action: 'hotel.guest.get_guest_code' //todo
+		action: 'hotel.guest.send_guest_code_from_details' //todo
 		args: j_args
 	)!
 

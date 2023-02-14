@@ -11,7 +11,7 @@ pub fn get_guest (guest_code string, baobab client.Client) !(string, person.Pers
 	j_args := params.Params{}
 	j_args.kwarg_add('guest_code', guest_code)
 	job := baobab.job_new(
-		action: 'hotel.guest.get_guest'
+		action: 'hotel.guest.send_guest_person'
 		args: j_args
 	)!
 	response := baobab.job_schedule_wait(job, 100)!
@@ -22,11 +22,7 @@ pub fn get_guest (guest_code string, baobab client.Client) !(string, person.Pers
 }
 
 pub fn validate_product_code(code string, baobab client.Client) !bool {
-	actor_name := match code[0].ascii_str() {
-		'K' {'kitchen'}
-		'B' {'bar'}
-		else {''} // todo fill these out
-	}
+	actor_name := match_code_to_vendor(code)!
 
 	if actor_name == '' { return false }
 
@@ -36,11 +32,11 @@ pub fn validate_product_code(code string, baobab client.Client) !bool {
 	return true
 }
 
-pub fn get_guest_orders (guest_code string, baobab client.Client) !map[string]common.Order {
+pub fn get_guest_active_orders (guest_code string, baobab client.Client) !map[string]common.Order {
 	j_args := params.Params{}
 	j_args.kwarg_add('guest_code',guest_code)
 	job := baobab.job_new(
-		action: 'hotel.guest.get_guest_orders'
+		action: 'hotel.guest.send_guest_active_orders'
 		args: j_args
 	)!
 
@@ -50,16 +46,16 @@ pub fn get_guest_orders (guest_code string, baobab client.Client) !map[string]co
 		return error("Failed to get guest orders.")
 	}
 
-	guest_orders := json.decode(map[string]common.Order, response.result.get('orders'))
+	guest_orders := json.decode([]common.Order, response.result.get('active_orders'))
 	return guest_orders
 }
 
 pub fn get_employee_person_from_handle (user_id string, channel_type string, baobab client.Client) !person.Person {
 	j_args := params.Params{}
-	j_args.kwarg_add('telegram_username', user_id)
+	j_args.kwarg_add('user_id', user_id)
 	j_args.kwarg_add('channel_type', channel_type)
 	job := baobab.job_new(
-		action: 'hotel.employee.get_employee_person_from_handle'
+		action: 'hotel.employee.send_employee_person_from_handle'
 		args: j_args
 	)!
 	response := baobab.job_schedule_wait(job, 100)!
@@ -75,18 +71,4 @@ pub fn validate_guest_code(guest_code string, baobab, client.Client) bool {
 	} else {
 		return false // todo return error message here
 	}
-}
-
-pub fn send_transaction (transaction Transaction) !bool {
-	j_args := params.Params{}
-	j_args.kwarg_add('transaction', json.encode(transaction))
-	job := baobab.job_new(
-		action: 'hotel.${transaction.target_actor}.receive_transaction'
-		args: j_args
-	)!
-	response := baobab.job_schedule_wait(job, 100)!
-	if response.state == .done {
-		return true
-	}
-	return false
 }

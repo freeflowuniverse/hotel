@@ -47,7 +47,7 @@ fn (flows ReceptionFlows) topup_guest_balance (job ActionJob) {
 	transaction.time_of = time.now()
 	transaction.target_actor = 'guest'
 
-	if flow_methods.send_transaction(transaction) {
+	if finance.send_transaction(transaction)! == true {
 		ui.send_exit_message("Succesfully added funds to the guest.")
 	} else {
 		ui.send_exit_message("Failed to add funds to guest.")

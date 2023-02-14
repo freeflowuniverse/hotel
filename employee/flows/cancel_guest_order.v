@@ -19,7 +19,7 @@ pub fn (flows EmployeeFlows) cancel_guest_order (job ActionJob) {
 		validation: flow_methods.validate_guest_code
 	)
 
-	active_orders := flow_methods.get_guest_orders(guest_code, flows.baobab).filter(it.status=.open)
+	active_orders := flow_methods.get_guest_active_orders(guest_code, flows.baobab)
 
 	mut order_strings := []string{}
 	orders_order := map[string]string{}
@@ -44,11 +44,10 @@ pub fn (flows EmployeeFlows) cancel_guest_order (job ActionJob) {
 		return
 	}	
 	
-	action := 'hotel.employee.cancel_guest_order'
-
-	if common.forward_order_cancellation(active_orders[target_order_id], action, flows.baobab)! == true {
-		ui.send_exit_message("A cancel request has been made. We will get back to you shortly on whether your order can still be cancelled.")
-	} else {
-		ui.send_exit_message("Failed to submit cancel request. Please try again later")
+	ui.send_message("A cancel request has been made. We will get back to you shortly on whether your order has been cancelled.")
+	
+	common.cancel_wait_order(active_orders[target_order_id], flows.baobab) or {
+		ui.send_message("Failed to cancel order. Please try again later.")
 	}
+	ui.send_message("Your order has been successfully cancelled.")
 }

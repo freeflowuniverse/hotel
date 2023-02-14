@@ -1,5 +1,6 @@
 module flows
 
+import freeflowuniverse.hotel.library.finance
 
 fn (flows ReceptionFlows) cash_out_guest (job ActionJob) {
 
@@ -58,7 +59,7 @@ fn (flows ReceptionFlows) cash_out_guest (job ActionJob) {
 	transaction.time_of = time.now()
 	transaction.target_actor = 'guest'
 
-	if flow_methods.send_transaction(transaction) {
+	if finance.send_transaction(transaction)! == true {
 		ui.send_exit_message("Succesfully removed funds from the guest.")
 	} else {
 		ui.send_exit_message("Failed to remove funds from guest.")

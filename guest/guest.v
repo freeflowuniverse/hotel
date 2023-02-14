@@ -6,11 +6,13 @@ import freeflowuniverse.crystallib.params
 
 import json
 
+// todo change maps to lists
+
 struct Guest {
 person.Person
 mut:
-	orders  map[string]common.Order // string is id of order
-	assistance_requests map[string]common.AssistanceRequest  // string is id
+	orders  []common.Order // string is id of order
+	assistance_requests []common.AssistanceRequest  // string is id
 	code    string
 }
 

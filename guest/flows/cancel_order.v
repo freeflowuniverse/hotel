@@ -15,7 +15,7 @@ pub fn (flows GuestFlows) cancel_order (job ActionJob) {
 		return
 	}
 
-	active_orders := flow_methods.get_guest_orders(guest_code, flows.baobab).filter(it.status=.open)
+	active_orders := flow_methods.get_guest_active_orders(guest_code, flows.baobab)
 
 	mut order_strings := []string{}
 	orders_order := map[string]string{}
@@ -36,17 +36,13 @@ pub fn (flows GuestFlows) cancel_order (job ActionJob) {
 	confirmation := ui.ask_yesno("Are you sure you want to delete this order?")
 
 	if confirmation == false {
-		ui.send_exit_message("No orders have been cancelled.") // todo how do we get them to redisplay the order selection. We could call flow again but that would go through the same calling process.
+		ui.send_message("No orders have been cancelled.") // todo how do we get them to redisplay the order selection. We could call flow again but that would go through the same calling process.
 		return
 	}
+	ui.send_message("A cancel request has been made. We will get back to you shortly on whether your order has been cancelled.")
 	
-	action := 'hotel.guest.cancel_order'
-
-	if guid := common.forward_order_cancellation(active_orders[target_order_id], action, flows.baobab) {
-		ui.send_exit_message("A cancel request has been made. We will get back to you shortly on whether your order can still be cancelled.")
-	} else {
-		ui.send_exit_message("Failed to submit cancel request. Please try again later")
+	common.cancel_wait_order(active_orders[target_order_id], flows.baobab) or {
+		ui.send_message("Failed to cancel order. Please try again later.")
 	}
-
-	// todo will need to have a separate function that tells them whether their order has been cancelled or not
+	ui.send_message("Your order has been successfully cancelled.")
 }

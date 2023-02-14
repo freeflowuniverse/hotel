@@ -1,6 +1,7 @@
 module finance
 
 import time
+import json
 
 // TODO move out of hotel
 
@@ -49,13 +50,47 @@ mut:
 	medium TransactionMedium
 	bank_transfer_details BankTransferDetails
 	note string
-	completed bool
+	transaction_status TransactionStatus
 	time_of time.Time
 	target_actor string
 }
 
-pub fn multiply (price Price, number int) Price {
-	new_price := price
+pub enum TransactionStatus {
+	open
+	closed
+	cancelled
+}
+
+pub fn (price Price) multiply (number int) Price {
+	mut new_price := price
 	new_price.val = price.val*number
 	return new_price
+}
+
+pub fn send_transaction (transaction Transaction) !bool {
+	j_args := params.Params{}
+	j_args.kwarg_add('transaction', json.encode(transaction))
+	job := baobab.job_new(
+		action: 'hotel.${transaction.target_actor}.receive_transaction'
+		args: j_args
+	)!
+	response := baobab.job_schedule_wait(job, 100)!
+	if response.state == .done {
+		return true
+	}
+	return false
+}
+
+pub fn (p1 Price) deduct (p2 Price) ! {
+	if p1.currency.name != p2.currency.name {
+		return error("Prices are of different currencies")
+	}
+	p1.val = p1.val - p2.val
+}
+
+pub fn (p1 Price) add (p2 Price) ! {
+	if p1.currency.name != p2.currency.name {
+		return error("Prices are of different currencies")
+	}
+	p1.val = p1.val + p2.val
 }
