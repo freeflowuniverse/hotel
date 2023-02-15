@@ -1,15 +1,19 @@
 module reception
 
-import library.common
+import freeflowuniverse.hotel.library.common
 
-struct Reception {
+import time
+
+pub struct Reception {
 	id string
 	complaints map[string]common.Message
 }
 
-struct GuestRegistration {
-	register_employee_id string
+pub struct GuestRegistration {
+pub mut:
+	employee_id string
 	guest_code string
+	// todo move to a different struct or move to accomodation
 	check_in time.Time
 	check_in_employee_id string
 	check_out time.Time

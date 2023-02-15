@@ -1,18 +1,19 @@
 module common
 
-import json
 import freeflowuniverse.baobab.client
 import freeflowuniverse.hotel.library.product
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.crystallib.params
 
 import time
+import json
 
 // ORDER
 
 
 // an exchange of goods or services with specific magnitude defined
 pub struct Order {
+pub mut:
 	id string
 	for_id string
 	orderer_id string // ? is this necessary? isnt it covered in the actionjob
@@ -26,7 +27,7 @@ pub struct Order {
 }
 
 
-enum OrderStatus {
+pub enum OrderStatus {
 	open
 	closed
 	cancelled
@@ -78,39 +79,39 @@ pub fn (order Order) stringify () string {
 // }
 
 pub fn split_send_wait_order(order Order, mut baobab client.Client) !([]Order, []Order) {
-	orders := map[string]common.Order{}
+	mut orders := map[string]common.Order{}
 	for p_amount in order.product_amounts {
 		actor_char := p_amount.product.id[0].ascii_str()
-		if actor_char !in orders.keys {
+		if actor_char !in orders.keys() {
 			orders[actor_char] = order
 			orders[actor_char].product_amounts.clear()
 		}
 		orders[actor_char].product_amounts << p_amount
 	}
 
-	job_guids := []string
+	mut job_guids := []string{}
 
-	for actor_char, order in orders {
-		order.target_actor = match_code_to_vendor(actor_char)!
-		j_args := params.Params{}
-		j_args.kwarg_add('order', json.encode(order))
-		n_job := actor.baobab.job_new(
+	for actor_char, mut order_ in orders {
+		order_.target_actor = product.match_code_to_vendor(actor_char)!
+		mut j_args := params.Params{}
+		j_args.kwarg_add('order', json.encode(order_))
+		mut n_job := baobab.job_new(
 			action: 'hotel.${order.target_actor}.order'
 			args: j_args
 		)!
-		actor.baobab.schedule_job(n_job, 0)!
+		baobab.job_schedule(mut n_job)!
 		job_guids << n_job.guid
 	}	
 
-	successes := []common.Order{}
-	failures := []common.Order{}
+	mut successes := []common.Order{}
+	mut failures := []common.Order{}
 
 	for guid in job_guids {
-		response := actor.job_wait(guid, 10)!
+		response := baobab.job_wait(guid, 10)!
 		if response.state == .done {
-			successes = json.decode(Order, response.args.get('order')!)!
+			successes << json.decode(Order, response.args.get('order')!)!
 		} else {
-			failures = json.decode(Order, response.args.get('order')!)!
+			failures << json.decode(Order, response.args.get('order')!)!
 		}
 	}
 	return successes, failures
@@ -118,7 +119,7 @@ pub fn split_send_wait_order(order Order, mut baobab client.Client) !([]Order, [
 
 pub fn cancel_wait_order (order common.Order, mut baobab client.Client) ! {
 	mut j_args := params.Params{}
-	j_args.kwarg_add('order', order)
+	j_args.kwarg_add('order', json.encode(order))
 	mut job := baobab.job_new(
 		action: 'hotel.${order.target_actor}.cancel_order'
 		args: j_args

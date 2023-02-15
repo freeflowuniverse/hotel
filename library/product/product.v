@@ -62,18 +62,24 @@ pub fn (p Product) stringify () string {
 	if p.variable_price {
 		product_str += 'This product is of variable price.'
 	}
+	return product_str
 }
 
 pub fn (p Product) short_str () string {
 	mut product_str := 'ID: $p.id\nName: $p.name\nPrice: ${p.price.val}${p.price.currency.name}\n'
+	return product_str
 }
 
 // pub struct ProductActorMixin {}
 
-fn match_code_to_vendor (product_code string) !string {
-	return match product_code[0].ascii_str() {
+pub fn match_code_to_vendor (product_code string) !string {
+	actor_name := match product_code[0].ascii_str() {
 		'K' {'kitchen'}
 		'B' {'bar'}
-		else {return error("Could not find the key")}
+		else {''}
 	}
+	if actor_name == '' {
+		return error("Could not find the key")
+	}
+	return actor_name
 }

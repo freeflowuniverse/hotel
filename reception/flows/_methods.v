@@ -12,7 +12,7 @@ fn (flows ReceptionFlows) register (guest_person person.Person, employee_id stri
 	j_args.kwarg_add('employee_id', employee_id)
 
 	job := flows.baobab.job_new(
-		action: 'hotel.reception.register'
+		action: 'hotel.reception.register_guest'
 		args: j_args
 	)!
 

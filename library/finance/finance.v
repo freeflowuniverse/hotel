@@ -2,6 +2,8 @@ module finance
 
 import time
 import json
+import freeflowuniverse.crystallib.params
+import freeflowuniverse.baobab.client
 
 // TODO move out of hotel
 
@@ -13,8 +15,8 @@ pub mut:
 [heap]
 pub struct Currency {
 pub mut:
-	name   string
-	usdval f64
+	name   string = 'USD'
+	usdval f64 = 1
 }
 
 pub struct Price {
@@ -61,34 +63,34 @@ pub enum TransactionStatus {
 	cancelled
 }
 
-pub fn (price Price) multiply (number int) Price {
+pub fn (mut price Price) multiply (number int) Price {
 	mut new_price := price
 	new_price.val = price.val*number
 	return new_price
 }
 
-pub fn send_transaction (transaction Transaction) !bool {
-	j_args := params.Params{}
+pub fn send_transaction (transaction Transaction, mut baobab client.Client) !bool {
+	mut j_args := params.Params{}
 	j_args.kwarg_add('transaction', json.encode(transaction))
-	job := baobab.job_new(
+	mut job := baobab.job_new(
 		action: 'hotel.${transaction.target_actor}.receive_transaction'
 		args: j_args
 	)!
-	response := baobab.job_schedule_wait(job, 100)!
+	response := baobab.job_schedule_wait(mut job, 100)!
 	if response.state == .done {
 		return true
 	}
 	return false
 }
 
-pub fn (p1 Price) deduct (p2 Price) ! {
+pub fn (mut p1 Price) deduct (p2 Price) ! {
 	if p1.currency.name != p2.currency.name {
 		return error("Prices are of different currencies")
 	}
 	p1.val = p1.val - p2.val
 }
 
-pub fn (p1 Price) add (p2 Price) ! {
+pub fn (mut p1 Price) add (p2 Price) ! {
 	if p1.currency.name != p2.currency.name {
 		return error("Prices are of different currencies")
 	}

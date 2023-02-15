@@ -9,39 +9,41 @@ import json
 
 // CATALOGUE REQUEST
 
-struct ProductAvailability {
+pub struct ProductAvailability {
 product.Product
+pub mut:
 	available_slots []Slot
 	available bool = true
 }
 
-struct Slot {
+pub struct Slot {
 	start time.Time
 	duration time.Time
 }
 
-struct CategoryFilter {
+pub struct CategoryFilter {
 	bools []BoolFilter
 }
 
-struct BoolFilter {
+pub struct BoolFilter {
 	name string
 	desired bool
 }
 
-struct DiscreteFilter {
+pub struct DiscreteFilter {
 	name string
 	start f64
 	end f64
 }
 
-struct ContinuousFilter {
+pub struct ContinuousFilter {
 	name string
 	start time.Time
 	end time.Time
 }
 
 pub struct CatalogueRequest {
+pub mut:
 	products []ProductAvailability
 	number_filters []DiscreteFilter
 	date_filters []ContinuousFilter
@@ -63,7 +65,7 @@ fn get_catalogue (product_ids []string, actor_name string, mut baobab client.Cli
 	
 	for id in product_ids {
 		request.products << ProductAvailability{
-			id: product_id
+			id: id
 		}
 	}
 	

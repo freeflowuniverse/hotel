@@ -1,16 +1,14 @@
 module guest
 
-import library.person
-import library.common
-import freeflowuniverse.crystallib.params
+import freeflowuniverse.hotel.library.person
+import freeflowuniverse.hotel.library.common
 
-import json
 
 // todo change maps to lists
 
-struct Guest {
+pub struct Guest {
 person.Person
-mut:
+pub mut:
 	orders  []common.Order // string is id of order
 	assistance_requests []common.AssistanceRequest  // string is id
 	code    string
@@ -56,23 +54,7 @@ Send Methods:
 */
 
 
-
-
-fn (guest Guest) expose_order_completed (params params.Params) ! {
-	
-	// order := common.params_to_order(params)
-	// encoded_confirmation := params.get('order_confirmation')
-	// confirmation := json.decode(common.Order, encoded_confirmation)!
-
-	confirmation := json.decode(common.Order, params.get('order'))
-
-	guest.confirmed_orders << confirmation
-	// TODO send off params
-}
-
-// ! currently I have managed to find a set off 
-
 // request confirmation
 // should receive an AssistanceRequest in return
-fn (guest Guest) request_assistance (request common.AssistanceRequest) ! {}
+// TODO fn (guest Guest) request_assistance (request common.AssistanceRequest) ! {}
 

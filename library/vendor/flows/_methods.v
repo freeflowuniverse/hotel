@@ -32,9 +32,9 @@ pub fn (flows IVendorFlows) send_close_order (order_id string) !bool {
 }
 
 pub fn (flows IVendorFlows) send_add_product (product product.Product) !string {
-	j_args := params.Params{}
+	mut j_args := params.Params{}
 	j_args.kwarg_add('product', json.encode(product))
-	job := flows.baobab.job_new(
+	mut job := flows.baobab.job_new(
 		action: 'hotel.${vendor.actor_name}.add_product'
 		args: j_args
 	)!

@@ -1,7 +1,6 @@
 module employee
 
 import freeflowuniverse.hotel.library.person
-import freeflowuniverse.hotel.library.common
 
 import time
 
