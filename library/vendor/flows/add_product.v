@@ -43,7 +43,7 @@ pub fn (flows IVendorFlows) add_product (job ActionJob) {
 			}
 		)
 
-		product_availability = common.get_product(product_code)
+		product_availability = product.get_product(product_code)
 
 		product_amount.product := product_a.Product
 		product_amount.price = product_amount.product.price.multiply(product_amount.quantity)

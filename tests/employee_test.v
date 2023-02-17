@@ -17,11 +17,11 @@ fn testsuite_begin() ! {
 	mut b := client.new()!
 	mut employeeactor := employee.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(employeeactor)])
-	mut processor := processor.Processor{}
+	mut processor_ := processor.Processor{}
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
-	spawn (&processor).run()
+	spawn (&processor_).run()
 }
 
 fn test_employee_actor() {
@@ -33,11 +33,8 @@ fn test_employee_actor() {
 	assert employee_id.len == 1
 
 	// todo deal with errors here
-	println("BEGIN")
-	// employee_person = sepfh_test(mut b, 'johnsmith', 'telegram') or {panic("sgp_test: $err")}
-	println("MIDDLE")
-	// assert employee_person == d_person
-	println("END")
+	employee_person = sepfh_test(mut b, 'johnsmith', 'telegram') or {panic("sgp_test: $err")}
+	assert employee_person == d_person
 }
 
 fn ae_test (mut b client.Client, employee_person string) !string {
@@ -51,6 +48,27 @@ fn sepfh_test (mut b client.Client, user_id string, channel_type string) !person
 	response := b.job_schedule_wait(mut job, 0) or {return error("Failed to schedule wait job: $err")}
 	return json.decode(person.Person, response.result.get('employee_person')!)!
 }
+
+// TODO test get handles from ids
+
+/*
+pub fn (mut actor EmployeeActor) get_handles_from_ids (mut job ActionJob) ! {
+	employee_ids := json.decode([]string, job.args.get('employee_ids'))
+	channel_type := job.args.get('channel_type')!
+
+	mut handles := []string{}
+
+	employees := actor.employees.filter(it.id in employee_ids)
+
+	for employee in employees {
+		handles << match channel_type {
+			'telegram' {employee.telegram_username}
+		}
+	}
+	
+	job.result.kwarg_add('handles', json.encode(handles))
+}
+*/
 
 
 fn create_job (pairs [][]string, actor_function string) !ActionJob {

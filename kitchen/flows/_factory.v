@@ -1,6 +1,6 @@
 module flows
 
-import freeflowuniverse.hotel.library.product.flows
+import freeflowuniverse.hotel.library.vendor.flows {IVendorFlows}
 
 struct KitchenFlows {
 	baobab client.Client

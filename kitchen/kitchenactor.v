@@ -1,10 +1,9 @@
 module kitchen
 
 import freeflowuniverse.baobab.jobs { ActionJob }
-import freeflowuniverse.hotel.library.common
-import freeflowuniverse.hotel.library.person
-
-import json
+import freeflowuniverse.hotel.library.vendor {VendorMixin}
+import freeflowuniverse.baobab.client
+import freeflowuniverse.hotel.library.product
 
 // todo figure out waiting
 
@@ -15,39 +14,43 @@ import json
 // todo remember to set job status to done if they were done succesfully
 
 pub struct KitchenActor {
-	name string = 'hotel.kitchen'
-	kitchens []Kitchen
+VendorMixin
+pub mut:
+	storage_id  string // The idea here is to have your menu defined by contents of supply
+	products     []product.Product
+	ingredients  []product.Product
 }
 
-pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
+pub fn new() !KitchenActor {
+	return KitchenActor{
+		name: 'hotel.kitchen'
+		baobab: client.new()!
+	}
+}
+
+pub fn (mut actor KitchenActor) execute (mut job ActionJob) ! {
 	$if debug {
-		eprintln('active guest..')
+		eprintln('active kitchen..')
 		println(job)
 	}
-	// used to initialize gitstructure by default
-	// if git init action isn't the first job
 
 	actionname := job.action.split('.').last()
 
 	for oj in actor.open_judgements {
 		if job.guid in oj.flow_guids {
-			actor.confirm_order_cancelled(mut job, oj)
+			actor.confirm_order_cancellation(mut job, oj)!
 		}
 	}
 
 	match actionname {
-		'cancel_order' {
-			actor.announce_cancellation_request(mut job)
+		'add_product' {
+			actor.products << actor.add_product(mut job, vendor.generate_product_id(actor.products)!)!
 		}
-		'order' {
-			actor.announce_order(mut job)
-		}
-		'close_order' {
-			actor.close_order(mut job)
+		'send_catalogue' {
+			actor.send_catalogue(mut job, actor.products)!
 		}
 		else {
-			error('could not find guest action for job:\n${job}')
-			return
+			actor.execute_vendor(mut job)!
 		}
 	}
 }

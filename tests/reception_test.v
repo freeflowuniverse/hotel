@@ -16,11 +16,11 @@ fn testsuite_begin() ! {
 	mut b := client.new()!
 	mut receptionactor := reception.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(receptionactor)])
-	mut processor := processor.Processor{}
+	mut processor_ := processor.Processor{}
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
-	spawn (&processor).run()
+	spawn (&processor_).run()
 }
 
 fn test_reception_actor() {
@@ -37,14 +37,13 @@ fn test_reception_actor() {
 
 fn rg_test (mut b client.Client, employee_id string, guest_person person.Person) !string {
 	mut job := create_job([['employee_id', employee_id], ['guest_person', json.encode(guest_person)]], 'reception.register_guest')!
-	// response := b.job_schedule_wait(mut job, 0)!
-	// return response.result.get('guest_code')!
-	return ''
+	response := b.job_schedule_wait(mut job, 0)!
+	return response.result.get('guest_code')!
 }
 
 // todo check that internal state is valid
 fn ci_test (mut b client.Client, employee_id string, guest_code string) !bool {
-	mut job := create_job([['employee_id', employee_id], ['guest_code', guest_code]], 'reception.check_in')!
+	mut job := create_job([['employee_id', employee_id], ['guest_code', guest_code]], 'reception.check_in_guest')!
 	response := b.job_schedule_wait(mut job, 0)!
 	if response.state == .done {
 		return true
@@ -55,7 +54,7 @@ fn ci_test (mut b client.Client, employee_id string, guest_code string) !bool {
 
 // todo check that internal state is valid
 fn co_test (mut b client.Client, employee_id string, guest_code string) !bool {
-	mut job := create_job([['employee_id', employee_id], ['guest_code', guest_code]], 'reception.check_out')!
+	mut job := create_job([['employee_id', employee_id], ['guest_code', guest_code]], 'reception.check_out_guest')!
 	response := b.job_schedule_wait(mut job, 0)!
 	if response.state == .done {
 		return true

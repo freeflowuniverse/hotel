@@ -14,16 +14,16 @@ import json
 // an exchange of goods or services with specific magnitude defined
 pub struct Order {
 pub mut:
-	id string
-	for_id string
-	orderer_id string // ? is this necessary? isnt it covered in the actionjob
+	id string // unique per actor
+	for_id string // who is the order for?
+	orderer_id string // who made the order? employee or guest?
     start time.Time // desired time for order to arrive or for booking to start
 	product_amounts []product.ProductAmount
 	note string
-	additional_attributes []Attribute
-	order_status OrderStatus
+	// additional_attributes []Attribute // extras like room service or for boat with captain or without captain
+	order_status OrderStatus // open, closed, cancelled
 	target_actor string
-	canceller_id string
+	canceller_id string // who cancelled the order? employee or guest? //? is there a better way to do this?
 }
 
 
@@ -61,22 +61,6 @@ pub fn (order Order) stringify () string {
 	return ordstr
 }
 
-//! pub fn forward_order (order Order, action string, mut baobab client.Client) !([]Order, []Order) {
-// 	mut j_args := params.Params{}
-// 	j_args.kwarg_add('order', json.encode(order))
-// 	mut job := baobab.job_new(
-// 		action: action
-// 		args: j_args
-// 	)!
-// 	response := baobab.job_schedule_wait(mut job, 100)!
-// 	if response.state == .error {
-// 		return error("Failed to place order")
-// 	}
-// 	successes := json.decode([]Order, response.result.get('success_orders')!)!
-// 	failures := json.decode([]Order, response.result.get('failure_orders')!)!
-
-// 	return successes, failures
-// }
 
 pub fn split_send_wait_order(order Order, mut baobab client.Client) !([]Order, []Order) {
 	mut orders := map[string]common.Order{}

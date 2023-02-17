@@ -25,7 +25,7 @@ pub fn (flows ViewCatalogueMixin) view_catalogue (job ActionJob) {
 
 	actor_name := actors[choice.int()-1]
 
-	avilable_products := common.get_catalogue([], actor_name, flows.baobab)!.products.filter(it.available==true)
+	avilable_products := product.get_catalogue([], actor_name, flows.baobab)!.products.filter(it.available==true)
 
 	product_strs := []string{}
 	for product in available_products {

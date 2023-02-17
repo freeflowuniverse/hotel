@@ -49,11 +49,32 @@ pub fn (mut actor EmployeeActor) execute (mut job ActionJob) ! {
 		'add_employee' {
 			actor.add_employee(mut job)!
 		}
+		'get_handles_from_ids' {
+			actor.get_handles_from_ids(mut job)!
+		}
 		else {
 			error('could not find employee action for job:\n${job}')
 			return
 		}
 	}
+}
+
+pub fn (mut actor EmployeeActor) get_handles_from_ids (mut job ActionJob) ! {
+	employee_ids := json.decode([]string, job.args.get('employee_ids')!)!
+	channel_type := job.args.get('channel_type')!
+
+	mut handles := []string{}
+
+	employees := actor.employees.filter(it.id in employee_ids)
+
+	for employee in employees {
+		handles << match channel_type {
+			'telegram' {employee.telegram_username}
+			else {panic("Couldn't recognise channel_type")}
+		}
+	}
+
+	job.result.kwarg_add('handles', json.encode(handles))
 }
 
 // todo title, actor_ids, etc

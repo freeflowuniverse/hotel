@@ -8,7 +8,9 @@ pub fn (flows IVendorFlows) close_order (job ActionJob) {
 	channel_type := job.args.get('channel_type')!
 	ui := ui.new(channel_type, user_id)
 
-	open_orders := flows.get_vendor_orders()!.filter(it.order_status == .open) // list of orders
+	vendor_name := job.action.split('.')[1..2] // todo confirm the exact structure of job.action
+
+	open_orders := flows.get_vendor_open_orders(vendor_name, true) // list of orders
 
 	mut order_strs := []string{}
 	for order in open_orders {

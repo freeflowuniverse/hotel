@@ -10,7 +10,6 @@ pub mut:
 	firstname         string
 	lastname          string
 	email             string
-	
 	phone_number      string
 	date_of_birth     time.Time
 	allergies         []string

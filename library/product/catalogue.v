@@ -16,43 +16,45 @@ pub mut:
 	available bool = true
 }
 
+// todo look at this in more detail
 pub struct Slot {
 	start time.Time
 	duration time.Time
 }
 
-pub struct CategoryFilter {
-	bools []BoolFilter
-}
+// pub struct CategoryFilter {
+// 	bools []BoolFilter
+// }
 
-pub struct BoolFilter {
-	name string
-	desired bool
-}
+// pub struct BoolFilter {
+// 	name string
+// 	desired bool
+// }
 
-pub struct DiscreteFilter {
-	name string
-	start f64
-	end f64
-}
+// pub struct DiscreteFilter {
+// 	name string
+// 	start f64
+// 	end f64
+// }
 
-pub struct ContinuousFilter {
-	name string
-	start time.Time
-	end time.Time
-}
+// pub struct ContinuousFilter {
+// 	name string
+// 	start time.Time
+// 	end time.Time
+// }
 
 pub struct CatalogueRequest {
 pub mut:
 	products []ProductAvailability
-	number_filters []DiscreteFilter
-	date_filters []ContinuousFilter
-	category_filters []CategoryFilter
-	additional_attributes []Attribute
-	// TODO other filters
+	// todo 
+	// number_filters []DiscreteFilter
+	// date_filters []ContinuousFilter
+	// category_filters []CategoryFilter
+	// additional_attributes []Attribute
 }
 
-fn get_product(product_id string, actor_name string, mut baobab client.Client) !ProductAvailability {
+fn get_product(product_id string, mut baobab client.Client) !ProductAvailability {
+	actor_name := match_code_to_vendor(product_id[0].ascii_str())!
 	catalogue_response := get_catalogue([product_id], actor_name, mut baobab)!
 	return catalogue_response.products[0]
 }
@@ -63,15 +65,15 @@ fn get_catalogue (product_ids []string, actor_name string, mut baobab client.Cli
 
 	mut request := CatalogueRequest{}
 	
-	for id in product_ids {
-		request.products << ProductAvailability{
-			id: id
-		}
-	}
-	
 	mut everything := false
 	if product_ids.len == 0 {
 		everything = true
+	} else {
+		for id in product_ids {
+			request.products << ProductAvailability{
+				id: id
+			}
+		}
 	}
 
 	j_args.kwarg_add('everything', '$everything')

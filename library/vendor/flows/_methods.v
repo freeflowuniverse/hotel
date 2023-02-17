@@ -6,9 +6,13 @@ import freeflowuniverse.baobab.jobs {ActionJob}
 import json
 
 
-pub fn (flows IVendorFlows) get_vendor_orders () ! {
+pub fn (flows IVendorFlows) get_vendor_orders (vendor_name string, open bool) ! {
+	mut j_args := params.Params{}
+	j_args.kwarg_add('open', open.str())
+			
 	job := flows.baobab.job_new(
-		action: 'hotel.${vendor.actor_name}.send_orders' // ? should this be send_orders or get_orders
+		action: 'hotel.${vendor_name}.send_orders' // ? should this be send_orders or get_orders
+		args: j_args
 	)!
 	response := flows.baobab.job_schedule_wait(job, 100)!
 	if response.state == .error {

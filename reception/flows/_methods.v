@@ -33,7 +33,7 @@ fn (flows ReceptionFlows) check_in (employee_id string, guest_code string) !bool
 	j_args.kwarg_add('employee_id', employee_id)
 
 	job := flows.baobab.job_new(
-		action: 'hotel.reception.check_in'
+		action: 'hotel.reception.check_in_guest'
 		args: j_args
 	)!
 
@@ -53,7 +53,7 @@ fn (flows ReceptionFlows) check_out (employee_id string, guest_code string) !boo
 	j_args.kwarg_add('employee_id', employee_id)
 
 	job := flows.baobab.job_new(
-		action: 'hotel.reception.check_out'
+		action: 'hotel.reception.check_out_guest'
 		args: j_args
 	)!
 

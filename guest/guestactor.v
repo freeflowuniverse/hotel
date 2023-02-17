@@ -60,8 +60,8 @@ pub fn (mut actor GuestActor) execute (mut job ActionJob) ! {
 		'send_guest_code_from_handle' {
 			actor.send_guest_code_from_handle(mut job)!
 		}
-		'send_guest_active_orders' {
-			actor.send_guest_active_orders(mut job)!
+		'send_guest_orders' {
+			actor.send_guest_orders(mut job)!
 		}
 		'add_guest' {
 			actor.add_guest(mut job)!
@@ -217,13 +217,17 @@ fn (mut actor GuestActor) send_guest_person (mut job ActionJob) ! {
 	job.result.kwarg_add('guest_person', json.encode(guest_list[0].Person))
 }
 
-fn (mut actor GuestActor) send_guest_active_orders (mut job ActionJob) ! {
+fn (mut actor GuestActor) send_guest_orders (mut job ActionJob) ! {
 	guest_code := job.args.get('guest_code')!
 	// make sure that this gets a guest_code
 	guest_list := actor.guests.filter(it.code==guest_code)
 	if guest_list.len != 1 {
 		return error("Could not find guest_code")
 	}
-	active_orders := guest_list[0].orders.filter(it.order_status==.open)
-	job.result.kwarg_add('active_orders', json.encode(active_orders))
+	active := job.args.get('active')!.bool()
+	mut orders := guest_list[0].orders
+	if active {
+		orders = orders.filter(it.order_status==.open)
+	}
+	job.result.kwarg_add('orders', json.encode(orders))
 }

@@ -39,11 +39,11 @@ pub fn (mut actor ReceptionActor) execute (mut job ActionJob) ! {
 		'register_guest' {
 			actor.register_guest(mut job)!
 		}
-		'check_in' {
-			actor.check_in(mut job)!
+		'check_in_guest' {
+			actor.check_in_guest(mut job)!
 		}
-		'check_out' {
-			actor.check_out(mut job)!
+		'check_out_guest' {
+			actor.check_out_guest(mut job)!
 		}
 		else {
 			error('could not find reception action for job:\n${job}')
@@ -63,12 +63,12 @@ fn (mut actor ReceptionActor) register_guest (mut job ActionJob) ! {
 		args: j_args
 	)!
 
-	// response := actor.baobab.job_schedule_wait(mut n_job, 1)!
-	// if response.state == .error {
-	// 	return error("Failed to register guest with guest actor")
-	// }
-	// guest_code := response.result.get('guest_code')!
-	guest_code := 'ABCD'
+	response := actor.baobab.job_schedule_wait(mut n_job, 1)!
+	if response.state == .error {
+		return error("Failed to register guest with guest actor")
+	}
+	guest_code := response.result.get('guest_code')!
+
 	actor.guest_registrations << GuestRegistration{
 		employee_id: employee_id
 		guest_code: guest_code
@@ -78,7 +78,7 @@ fn (mut actor ReceptionActor) register_guest (mut job ActionJob) ! {
 }
 
 
-fn (mut actor ReceptionActor) check_in (mut job ActionJob) ! {
+fn (mut actor ReceptionActor) check_in_guest (mut job ActionJob) ! {
 	
 	employee_id := job.args.get('employee_id')!
 	guest_code := job.args.get('guest_code')!
@@ -91,7 +91,7 @@ fn (mut actor ReceptionActor) check_in (mut job ActionJob) ! {
 	}
 }
 
-fn (mut actor ReceptionActor) check_out (mut job ActionJob) ! {
+fn (mut actor ReceptionActor) check_out_guest (mut job ActionJob) ! {
 	
 	employee_id := job.args.get('employee_id')!
 	guest_code := job.args.get('guest_code')!

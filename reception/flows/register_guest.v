@@ -23,6 +23,7 @@ fn (flows ReceptionFlows) register_guest (job ActionJob) {
 	guest.email = ui.ask_string( // todo ask_email
 		question: "What is the guest's email?"
 	) 
+	// TODO cant ask this, not part of person
 	guest.hotel_resident = ui.ask_yesno(
 		question: "Is the guest a resident of the hotel?"
 	)

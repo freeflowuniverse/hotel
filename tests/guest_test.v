@@ -21,11 +21,11 @@ fn testsuite_begin() ! {
 	mut b := client.new()!
 	mut guestactor := guest.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(guestactor)])
-	mut processor := processor.Processor{}
+	mut processor_ := processor.Processor{}
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
-	spawn (&processor).run()
+	spawn (&processor_).run()
 }
 
 fn test_guest_actor() {
@@ -96,9 +96,9 @@ fn vgc_test (mut b client.Client, guest_code string) !bool {
 }
 
 fn sgao_test (mut b client.Client, guest_code string) ![]common.Order {
-	mut job := create_job([['guest_code', guest_code]], 'guest.send_guest_active_orders') or {return error("Failed to create job: $err")}
+	mut job := create_job([['guest_code', guest_code], ['active', 'true']], 'guest.send_guest_orders') or {return error("Failed to create job: $err")}
 	response := b.job_schedule_wait(mut job, 0) or {return error("Failed to schedule wait job: $err")}
-	return json.decode([]common.Order, response.result.get('active_orders')!)!
+	return json.decode([]common.Order, response.result.get('orders')!)!
 }
 
 fn sgcfh_test (mut b client.Client, user_id string, channel_type string) !string {

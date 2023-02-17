@@ -49,7 +49,7 @@ fn (mut flows EmployeeFlows) order_guest_product (job ActionJob) {
 			}
 		)
 
-		product_availability = common.get_product(product_code)
+		product_availability = product.get_product(product_code)
 		if product_availability.available == false {
 			ui.send_message("That product is not available ")
 			continue product_loop

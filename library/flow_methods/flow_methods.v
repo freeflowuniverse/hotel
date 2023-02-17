@@ -26,7 +26,7 @@ pub fn validate_product_code(code string, baobab client.Client) !bool {
 
 	if actor_name == '' { return false }
 
-	response := common.get_product(code[1..(code.len)], actor_name, baobab)
+	response := product.get_product(code[1..(code.len)], actor_name, baobab)
 	
 	if response.state == .error { return false }
 	return true
@@ -35,8 +35,9 @@ pub fn validate_product_code(code string, baobab client.Client) !bool {
 pub fn get_guest_active_orders (guest_code string, baobab client.Client) !map[string]common.Order {
 	j_args := params.Params{}
 	j_args.kwarg_add('guest_code',guest_code)
+	j_args.kwarg_add('active', 'true')
 	job := baobab.job_new(
-		action: 'hotel.guest.send_guest_active_orders'
+		action: 'hotel.guest.send_guest_orders'
 		args: j_args
 	)!
 
@@ -46,7 +47,7 @@ pub fn get_guest_active_orders (guest_code string, baobab client.Client) !map[st
 		return error("Failed to get guest orders.")
 	}
 
-	guest_orders := json.decode([]common.Order, response.result.get('active_orders'))
+	guest_orders := json.decode([]common.Order, response.result.get('orders'))
 	return guest_orders
 }
 
