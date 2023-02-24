@@ -32,7 +32,7 @@ fn (mut flows GuestFlows) execute (actionname string, job ActionJob) {
 			flows.get_code(job)!
 		}
 		'cancel_order' {
-			flows.cancel_order
+			flows.cancel_order(job)!
 		}
 		// TODO
 		// 'help' {

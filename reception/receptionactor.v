@@ -4,7 +4,6 @@ import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.hotel.library.finance
 import freeflowuniverse.baobab.client
-import freeflowuniverse.crystallib.params
 
 import time
 
@@ -55,26 +54,12 @@ pub fn (mut actor ReceptionActor) execute (mut job ActionJob) ! {
 fn (mut actor ReceptionActor) register_guest (mut job ActionJob) ! {
 	
 	employee_id := job.args.get('employee_id')!
-
-	mut j_args := params.Params{}
-	j_args.kwarg_add('guest_person', job.args.get('guest_person')!)
-	mut n_job := actor.baobab.job_new(
-		action: 'hotel.guest.add_guest'
-		args: j_args
-	)!
-
-	response := actor.baobab.job_schedule_wait(mut n_job, 1)!
-	if response.state == .error {
-		return error("Failed to register guest with guest actor")
-	}
-	guest_code := response.result.get('guest_code')!
+	guest_code := job.args.get('guest_code')!
 
 	actor.guest_registrations << GuestRegistration{
 		employee_id: employee_id
 		guest_code: guest_code
 	}
-		
-	job.result.kwarg_add('guest_code', guest_code)	
 }
 
 

@@ -1,4 +1,4 @@
-module common
+module product
 
 import freeflowuniverse.baobab.client
 import freeflowuniverse.hotel.library.product

@@ -22,6 +22,7 @@ fn testsuite_begin() ! {
 	mut guestactor := guest.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(guestactor)])
 	mut processor_ := processor.Processor{}
+	processor_.reset()!
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
@@ -111,9 +112,6 @@ fn sgcfh_test (mut b client.Client, user_id string, channel_type string) !string
 // 'log_order_cancellation' {
 // 	actor.log_order_cancellation(mut job)!
 // }
-// 'send_guest_code_from_handle' {
-// 	actor.send_guest_code_from_handle(mut job)!
-// }
 
 // fn loc_test () ! {
 	
@@ -166,11 +164,11 @@ fn dummy_order (guest_code string) common.Order {
 			}
 		}]
 		note: 'note'
-		additional_attributes: [common.Attribute{
-			key: 'room_service'
-			value: 'true'
-			value_type: 'bool'
-		}]
+		// additional_attributes: [common.Attribute{
+		// 	key: 'room_service'
+		// 	value: 'true'
+		// 	value_type: 'bool'
+		// }]
 		order_status: .open
 		target_actor: 'restaurant'
 	}

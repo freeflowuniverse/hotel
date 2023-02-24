@@ -225,7 +225,7 @@ fn (mut actor GuestActor) send_guest_orders (mut job ActionJob) ! {
 		return error("Could not find guest_code")
 	}
 	active := job.args.get('active')!.bool()
-	mut orders := guest_list[0].orders
+	mut orders := guest_list[0].orders.clone()
 	if active {
 		orders = orders.filter(it.order_status==.open)
 	}

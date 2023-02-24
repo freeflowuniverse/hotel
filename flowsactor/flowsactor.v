@@ -51,7 +51,7 @@ pub fn (mut actor FlowActor) execute (mut job ActionJob) ! {
 	}
 	if reference.id == '' {
 		job.state = .error
-		actor.baobab.job_schedule(job) // ? is this the right way to return error jobs
+		return	
 	}
 
 	actionname := job.action.split('.').last()

@@ -17,6 +17,7 @@ fn testsuite_begin() ! {
 	mut receptionactor := reception.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(receptionactor)])
 	mut processor_ := processor.Processor{}
+	processor_.reset()!
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
@@ -26,8 +27,8 @@ fn testsuite_begin() ! {
 fn test_reception_actor() {
 	mut b := client.new() or { panic(err) }
 	d_person := dummy_person() 
-	// todo will need to mock the guest actor to respond
-	guest_code := rg_test(mut b, '27', d_person) or {panic("rg_test: $err")}
+	guest_code := 'ABCD'
+	assert rg_test(mut b, '27', d_person, guest_code) or {panic("rg_test: $err")} == true
 	// assert guest_code.len == 4
  
 	// assert ci_test(mut b, '27', guest_code) or {panic("ci_test: $err")} == true 
@@ -35,10 +36,14 @@ fn test_reception_actor() {
 }
 
 
-fn rg_test (mut b client.Client, employee_id string, guest_person person.Person) !string {
-	mut job := create_job([['employee_id', employee_id], ['guest_person', json.encode(guest_person)]], 'reception.register_guest')!
+fn rg_test (mut b client.Client, employee_id string, guest_person person.Person, guest_code string) !bool {
+	mut job := create_job([['employee_id', employee_id], ['guest_person', json.encode(guest_person)], ['guest_code', guest_code]], 'reception.register_guest')!
 	response := b.job_schedule_wait(mut job, 0)!
-	return response.result.get('guest_code')!
+	if response.state == .done {
+		return true
+	} else {
+		return false
+	}
 }
 
 // todo check that internal state is valid

@@ -18,6 +18,7 @@ fn testsuite_begin() ! {
 	mut employeeactor := employee.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(employeeactor)])
 	mut processor_ := processor.Processor{}
+	processor_.reset()!
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
@@ -27,14 +28,18 @@ fn testsuite_begin() ! {
 fn test_employee_actor() {
 	mut b := client.new() or { panic(err) }
 	mut employee_person := person.Person{}
+	channel_type := 'telegram'
 
 	d_person := dummy_person()
 	employee_id := ae_test(mut b, json.encode(d_person)) or {panic("ae_test: $err")}
 	assert employee_id.len == 1
 
 	// todo deal with errors here
-	employee_person = sepfh_test(mut b, 'johnsmith', 'telegram') or {panic("sgp_test: $err")}
+	employee_person = sepfh_test(mut b, d_person.telegram_username, channel_type) or {panic("sgp_test: $err")}
 	assert employee_person == d_person
+
+	// handles := ghfi_test(mut b, [employee_id], channel_type)!
+	// assert handles[0] == d_person.telegram_username
 }
 
 fn ae_test (mut b client.Client, employee_person string) !string {
@@ -49,27 +54,11 @@ fn sepfh_test (mut b client.Client, user_id string, channel_type string) !person
 	return json.decode(person.Person, response.result.get('employee_person')!)!
 }
 
-// TODO test get handles from ids
-
-/*
-pub fn (mut actor EmployeeActor) get_handles_from_ids (mut job ActionJob) ! {
-	employee_ids := json.decode([]string, job.args.get('employee_ids'))
-	channel_type := job.args.get('channel_type')!
-
-	mut handles := []string{}
-
-	employees := actor.employees.filter(it.id in employee_ids)
-
-	for employee in employees {
-		handles << match channel_type {
-			'telegram' {employee.telegram_username}
-		}
-	}
-	
-	job.result.kwarg_add('handles', json.encode(handles))
+fn ghfi_test (mut b client.Client, employee_ids []string, channel_type string) ![]string {
+	mut job := create_job([['employee_ids', json.encode(employee_ids)],['channel_type', channel_type]], 'employee.get_handles_from_ids') or {return error("Failed to create job: $err")}
+	response := b.job_schedule_wait(mut job, 0) or {return error("Failed to schedule wait job: $err")}
+	return json.decode([]string, response.result.get('handles')!)!
 }
-*/
-
 
 fn create_job (pairs [][]string, actor_function string) !ActionJob {
 	mut j_args := params.Params{}
@@ -84,7 +73,6 @@ fn create_job (pairs [][]string, actor_function string) !ActionJob {
 
 fn dummy_person () person.Person {
 	return person.Person{
-		id: '23'
 		firstname: 'John'
 		lastname: 'Smith'
 		email: 'john@gmail.com'

@@ -1,7 +1,7 @@
 module vendor
 
 import freeflowuniverse.hotel.library.common
-import freeflowuniverse.hotel.library.product
+import freeflowuniverse.hotel.library.product {Product}
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.baobab.client
 import freeflowuniverse.baobab.jobs {ActionJob}
@@ -10,6 +10,7 @@ import json
 
 pub struct VendorMixin {
 pub mut:
+	telegram_channel string
 	name string
 	open_judgements []OpenJudgement
 	orders []common.Order
@@ -55,9 +56,9 @@ pub fn (vendor VendorMixin) send_catalogue (mut job ActionJob, products []produc
 
 	mut catalogue := product.CatalogueRequest{}
 	if everything {
-		for product in products {
+		for product_ in products {
 			catalogue.products << product.ProductAvailability{
-				Product: product
+				Product: product_
 			}
 		}
 	} else {
@@ -93,7 +94,7 @@ pub fn (vendor VendorMixin) send_orders (mut job ActionJob) ! {
 	}
 
 	job.result.kwarg_add('orders', json.encode(orders))
-	}
+}
 
 pub fn (mut vendor VendorMixin) order (mut job ActionJob) ! {
 	order := json.decode(common.Order, job.args.get('order')!)!
@@ -102,15 +103,16 @@ pub fn (mut vendor VendorMixin) order (mut job ActionJob) ! {
 
 	channel_type := 'telegram'
 
-	mut j_ids_args := params.Params{}
-	j_ids_args.kwarg_add('employee_ids', json.encode(vendor.employee_ids))
-	j_ids_args.kwarg_add('channel_type', channel_type)
+	// todo this should be replaced by a telegram channel
+	// mut j_ids_args := params.Params{}
+	// j_ids_args.kwarg_add('employee_ids', json.encode(vendor.employee_ids))
+	// j_ids_args.kwarg_add('channel_type', channel_type)
 
-	mut ids_job := vendor.baobab.job_new(
-		args: j_ids_args
-		action: 'hotel.employee.get_handles_from_ids'
-	)!
-	response := vendor.baobab.job_schedule_wait(mut ids_job, 0)!
+	// mut ids_job := vendor.baobab.job_new(
+	// 	args: j_ids_args
+	// 	action: 'hotel.employee.get_handles_from_ids'
+	// )!
+	// response := vendor.baobab.job_schedule_wait(mut ids_job, 0)!
 	handles := json.decode([]string, response.result.get('handles')!)!
 
 	mut j_flow_args := params.Params{}

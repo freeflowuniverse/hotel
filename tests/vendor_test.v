@@ -24,6 +24,7 @@ fn testsuite_begin() ! {
 	mut baractor := bar.new()!
 	mut ar := actionrunner.new(b, [&actor.IActor(kitchenactor),&actor.IActor(baractor)])
 	mut processor_ := processor.Processor{}
+	processor_.reset()!
 
 	// concurrently run actionrunner, processor, and external client
 	spawn (&ar).run()
@@ -200,11 +201,11 @@ fn dummy_kitchen_order () common.Order {
 			}
 		}]
 		note: 'note'
-		additional_attributes: [common.Attribute{
-			key: 'room_service'
-			value: 'true'
-			value_type: 'bool'
-		}]
+		// additional_attributes: [common.Attribute{
+		// 	key: 'room_service'
+		// 	value: 'true'
+		// 	value_type: 'bool'
+		// }]
 		order_status: .open
 		target_actor: 'kitchen'
 	}
@@ -235,11 +236,11 @@ fn dummy_bar_order () common.Order {
 			}
 		}]
 		note: 'note'
-		additional_attributes: [common.Attribute{
-			key: 'room_service'
-			value: 'true'
-			value_type: 'bool'
-		}]
+		// additional_attributes: [common.Attribute{
+		// 	key: 'room_service'
+		// 	value: 'true'
+		// 	value_type: 'bool'
+		// }]
 		order_status: .open
 		target_actor: 'bar'
 	}

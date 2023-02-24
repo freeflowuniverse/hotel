@@ -48,12 +48,12 @@ pub fn (order Order) stringify () string {
 	if order.note != '' {
 		ordstr += 'Note: $order.note\n'
 	}
-	if order.additional_attributes.len != 0 {
-		ordstr += 'Additional Attributes:\n'
-		for attr in order.additional_attributes {
-			ordstr += ' - ${attr.key.capitalize()}: $attr.value\n'
-		}
-	}
+	// if order.additional_attributes.len != 0 {
+	// 	ordstr += 'Additional Attributes:\n'
+	// 	for attr in order.additional_attributes {
+	// 		ordstr += ' - ${attr.key.capitalize()}: $attr.value\n'
+	// 	}
+	// }
 	ordstr += 'Products:\n'
 	for pa in order.product_amounts {
 		ordstr += ' - $pa.quantity x $pa.product.name\n'

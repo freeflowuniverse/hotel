@@ -4,6 +4,7 @@ import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.hotel.library.person
 import freeflowuniverse.baobab.client
 
+// todo use chat ids instead of telegram usernames, if message from new employee then check for chat id, else check for username if present reassign chat id
 
 import json
 
