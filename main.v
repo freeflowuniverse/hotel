@@ -7,7 +7,7 @@ import freeflowuniverse.baobab.jobs {ActionJob}
 import freeflowuniverse.hotel.guest
 
 fn main() {
-
+	gs := guest.new_gs()!
 }
 
 

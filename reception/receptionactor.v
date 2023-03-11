@@ -29,8 +29,6 @@ pub fn (mut actor ReceptionActor) execute (mut job ActionJob) ! {
 		eprintln('active reception..')
 		println(job)
 	}
-	// used to initialize gitstructure by default
-	// if git init action isn't the first job
 
 	actionname := job.action.split('.').last()
 

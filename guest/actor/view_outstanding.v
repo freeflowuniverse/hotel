@@ -1,6 +1,7 @@
 module flows
 
 import freeflowuniverse.hotel.library.flow_methods
+import freeflowuniverse.crystallib.ui
 
 pub fn (actor GuestFlows) view_outstanding_flow (job ActionJob) {
 

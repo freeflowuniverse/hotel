@@ -8,6 +8,9 @@ import freeflowuniverse.baobab.client
 
 import json
 import rand
+import os
+
+
 
 // todo figure out waiting
 
@@ -160,22 +163,6 @@ fn (mut actor GuestActor) send_guest_code_from_handle (mut job ActionJob) ! {
 	}
 }
 
-
-fn (actor GuestActor) generate_guest_code () string {
-	mut guest_codes := []string{}
-	for guest in actor.guests {
-		guest_codes << guest.code
-	}
-	mut valid := false
-	mut code := ''
-	for valid == false {
-		code = rand.string(4).to_upper()
-		if code !in guest_codes {
-			valid = true
-		}
-	}
-	return code
-}
 
 fn (mut actor GuestActor) validate_guest_code (mut job ActionJob) ! {
 	guest_code := job.args.get('guest_code')!.to_upper()

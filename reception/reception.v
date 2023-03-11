@@ -4,11 +4,6 @@ import freeflowuniverse.hotel.library.common
 
 import time
 
-pub struct Reception {
-	id string
-	complaints map[string]common.Message
-}
-
 pub struct GuestRegistration {
 pub mut:
 	employee_id string
