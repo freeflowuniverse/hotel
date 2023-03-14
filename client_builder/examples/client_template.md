@@ -31,7 +31,7 @@ pub fn (client @{client.name.capitalize()}Client) @{method.name} (
 
 	j_args := params.Params{}
 	@for _, data in method.inputs
-	j_args.kwarf_add('@{data.name}', @{data.name})
+	j_args.kwarg_add('@{data.name}', @{data.name})
 	@end
 
 	job := client.baobab.job_new(

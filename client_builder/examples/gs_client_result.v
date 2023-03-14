@@ -15,18 +15,26 @@ pub fn new() GuestClient {
 	}
 }
 
-pub fn (client GuestClient) add_guest (guest_person person.Person, ) !(string, string, ){
+pub fn (client GuestClient) add_guest (
+	guest_person person.Person, 
+	) !(
+		string, 
+		string, )
+	{
 	j_args := params.Params{}
 	j_args.kwarg_add('guest_person', json.encode(guest_person))
 	job := flows.baobab.job_new(
-		action: 'hotel.guest.add_guest'
+		action: 'hotel.
+		guest.add_guest'
 		args: j_args
 	)!
 	response := client.baobab.job_schedule_wait(job, 100)!
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
-	return response.result.get('code')!, response.result.get('name')!, 
+	return 
+	response.result.get('code')!, 
+	response.result.get('name')!, 
 }
 
 pub fn (client GuestClient) identify_guest (user_id string, channel_type string, ) !(person.Person, string, ){
