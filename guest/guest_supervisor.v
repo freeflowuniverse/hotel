@@ -48,10 +48,18 @@ fn (gs GuestSupervisor) handle_job (mut job ActionJob) ! {
 			code := gs.add_guest(get_person(job)!)!
 			job.result.kwarg_add('guest_code', code)
 		}
+		'actor_method' {
+			// get params from job
+			// parse params into function which executes synchronously
+			// put results back into job
+		}
 		'order_product_flow' {
 			// todo should this take in the job or should it take in params?
 			// ! I think it necessarily must take in the job, otherwise it will be problematic. Let's consider the impacts tho of putting a mutable job into a new thread
 			spawn guest.order_product_flow(job.args.get('chat_id')!, job.args.get('user_id')!, job.args.get('channel_type')!)!
+		}
+		'flow_method' {
+			
 		}
 	}
 }
