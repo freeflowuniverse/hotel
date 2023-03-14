@@ -1,9 +1,9 @@
 module guest
 
-import freeflowuinverse.baobab.jobs {ActionJob}
-import freeflowuinverse.baobab.client
-import freeflowuinverse.hotel.library.person
-import freeflowuinverse.hotel.guest.actor
+import freeflowuniverse.baobab.jobs {ActionJob}
+import freeflowuniverse.baobab.client
+import freeflowuniverse.hotel.library.person
+import freeflowuniverse.hotel.guest.actor
 import json
 
 /*

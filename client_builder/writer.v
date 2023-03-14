@@ -26,6 +26,7 @@ pub fn (mut b Builder) generate_client () {
 	mut str := ''
 
 	str += 'module ${b.client.name}_client\n\n'
+	str += 'import json\n\n'
 	str += 'import freeflowuniverse.crystallib.params\n'
 	str += 'import freeflowuniverse.baobab.client as baobab_client\n'
 	for imp in b.client.imports {
@@ -54,7 +55,11 @@ pub fn (mut b Builder) generate_client () {
 		str +=  '{\n'
 		str +=  '\tj_args := params.Params{}\n'
 		for _, data in method.inputs {
-			str += "\tj_args.kwarg_add('${data.name}', ${data.name})\n"
+			if data.data_type.contains('.') {
+				str += "\tj_args.kwarg_add('${data.name}', json.encode(${data.name}))\n"
+			} else {
+				str += "\tj_args.kwarg_add('${data.name}', ${data.name})\n"
+			}
 		}
 		str += '\tjob := flows.baobab.job_new(\n'
 		str += "\t\taction: 'hotel.${b.client.name}.${method.name}'\n"
@@ -65,7 +70,11 @@ pub fn (mut b Builder) generate_client () {
 		str += "\t\treturn error('Job returned with an error')\n\t}\n"
 		str += '\treturn '
 		for _, data in method.outputs {
-			str += "response.result.get('${data.name}')!, "
+			if data.data_type.contains('.') {
+				str += "json.decode(${data.data_type} ,response.result.get('${data.name}')!)!, "
+			} else {
+				str += "response.result.get('${data.name}')!, "
+			}
 		}
 		str += '\n}\n\n'
 	}
