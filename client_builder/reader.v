@@ -1,184 +1,224 @@
 module client_builder
 
+import v.ast
+import v.pref
+import v.parser
 import os
 
-// todo get outputs from where they are added to the job but first clarify that this is actually where they will be defined
+// todo imports
+// todo if a sum type is returned, then the client should recognise this and decode and set the output with the correct
 
-// TODO decide how that dir will be structured
-// top level function to read the entire actor including flows and spv methods
-pub fn (b Builder) read_actor (dir_path string) {
-
-}
-
-pub fn (mut b Builder) read_spv_file (file_path string) ! {
-	text := os.read_file(file_path)!
-	b.read_spv_file_text(text)
-}
-
-// This must be called before reading the actor flow methods
-// STANDARD FORMAT: router function must have the name 'handle_job'
-fn (mut b Builder) read_spv_file_text (spv_text string) {
-
-	mut functions := []string{}
-
-	mut finished := false 
-	mut remaining := spv_text.replace('\npub fn ', '\nfn ')
-	mut function := ''
-
-	for finished == false {
-		function, remaining = get_curly_contents(remaining.all_after_first('\nfn ').replace_once('{',''))
-		functions << "fn " + function.replace_once('\n', '{\n')
-		if remaining.contains('\nfn ') == false {
-			finished = true
-		}
+const (
+	fpref = &pref.Preferences{
+		is_fmt: true
 	}
+)
 
-	mut index := 0
-	for function_ in functions {
-		if function_.replace(' ', '').contains(')handle_job(') {
-			b.client = read_router_function(function_)
+pub fn (mut b Builder) read_actor_dir(dir_path string) ! {
+	b.actor_name = dir_path.split('/').last()
+	$if debug { println("\tReading file actor.v ...") }
+	b.read_actor('${dir_path}/actor.v')!
+	$if debug { println("\tReading file ${b.actor_name}.v ...") }
+	b.read_methods('${dir_path}/${b.actor_name}.v')!
+	if os.exists('${dir_path}/flows.v') {
+		$if debug { println("\tReading file flows.v ...") }
+		b.read_flows('${dir_path}/flows.v')!
+	}
+	b.fix_import_types()
+	$if debug { println("\tSuccessfully read ${b.actor_name} directory!\n") }
+}
+
+fn (mut b Builder) read_actor(file_path string) ! {
+	actor_file, _ := read_file(file_path)
+	$if debug { println("\t\tFiltering file statements...") }
+	execute_fn := actor_file.stmts.filter(it is ast.FnDecl).map(it as ast.FnDecl).filter(it.name == 'execute')[0]
+
+	match_exprs := execute_fn.stmts.filter(it is ast.ExprStmt).map(it as ast.ExprStmt).filter(it.expr is ast.MatchExpr).map(it.expr).map(it as ast.MatchExpr)
+
+	match_expr := match_exprs.filter((it.cond as ast.Ident).name == 'actionname')[0]
+
+	$if debug { println("\t\tEvaluating router match function branches...") }
+	for branch in match_expr.branches {
+		$if debug { println("\t\t\tEvaluating next branch...") }
+		mut flow_bool := false
+		if branch.is_else {
 			break
-		} 
-		index += 1
-	}
-
-	functions.delete(index)
-
-	b.read_spv_methods(functions)
-
-	b.read_imports(spv_text)
-
-	b.client.name = spv_text.all_after_first('module ').all_before('\n')
-}
-
-fn (mut b Builder) read_imports (text string) {
-	import_lines := text.split('\n').filter(it.starts_with('import'))
-	for method in b.client.spv_methods {
-		for _, output in method.outputs {
-			for line in import_lines {
-				if line.all_after_last('.').all_before(' ') == output.data_type.all_before('.') {
-					b.client.imports << line
+		}
+		mut method := Method{
+			name: branch.exprs.map(it as ast.StringLiteral)[0].val
+		}
+		mut output_order := []string{}
+		for stmt in branch.stmts {
+			$if debug { println("\t\t\t\tEvaluating branch statement:  ${stmt.str().split('\n')[0]}") }
+			match stmt {
+				ast.AssignStmt {
+					mut right := stmt.right[0] as ast.CallExpr
+					if stmt.right[0].str().contains('params.get(') {
+						if right.name == 'decode' {
+							right = right.args[1].expr as ast.CallExpr
+						}
+						$if debug { println("\t\t\t\t\tInput: ${right.args[0].str()}") }
+						method.add_input(right.args[0].str().trim('"').trim("'"), '')
+					} else if stmt.right.str().contains("${b.actor_name}.${method.name}") {
+						for result in stmt.left {
+							output_order << result.str()
+							$if debug { println("\t\t\t\t\tOutput: ${result.str()}") }
+						}
+					}
 				}
+				// todo will need to modify this part of the reader to accomodate for sum type casting
+				// this should be covered already
+
+				// todo will need to do imports for variable types
+
+				ast.ExprStmt {
+					if stmt.expr.str().contains('.result.kwarg_add(') {
+						call_expr := stmt.expr as ast.CallExpr
+						var_name := call_expr.args[0].str().trim('"').trim("'")
+						pos := output_order.index(var_name)
+						if pos == -1 {
+							return error('Invalid naming conventions for results and kwargs!')
+						}
+						method.add_output(var_name, '', pos)
+					} else if stmt.expr.str().starts_with('go ') {
+						flow_bool = true
+					}
+				}
+				else {}
 			}
 		}
-		for _, input in method.inputs {
-			for line in import_lines {
-				if line.all_after_last('.').all_before(' ') == input.data_type.all_before('.') {
-					b.client.imports << line
-				}
-			}
+		if flow_bool {
+			b.flow_methods << method
+		} else {
+			b.actor_methods << method
 		}
 	}
 }
 
-fn (mut b Builder) read_spv_methods (functions []string) {
+fn (mut b Builder) read_methods(file_path string) ! {
+	method_file, table := read_file(file_path)
+	functions := method_file.stmts.filter(it is ast.FnDecl).map(it as ast.FnDecl)
+
 	for function in functions {
-		first_line := function.all_before('\n').all_after_first(')')
-		for mut method in b.client.spv_methods {
-			if first_line.contains(method.name) {
-				inputs := first_line.find_between('(', ')').split(',')
-				for input in inputs {
-					method.add_input(input.trim_space().split(' ')[0], input.trim_space().split(' ')[1])
-				}
-				outputs := first_line.all_after_first(')').trim('{ !?()').split(',')
-				mut count := 0
-				for output in outputs {
-					method.outputs[count].data_type = output.trim_space()
-					count += 1
+		if b.actor_methods.any(it.name == function.name) {
+			mut method := &b.actor_methods.filter(it.name == function.name)[0]
+			for param in function.params {
+				for _, mut input in method.inputs {
+					if input.name == param.name {
+						input.data_type = table.type_str(param.typ)
+					}
 				}
 			}
-		}	
-	}
-}
-
-// STANDARD FORMAT: match function must be of the form - match actionname {}
-fn read_router_function (router_text string) Client {
-	mut spv_front_trimmed := router_text.replace(' ', '').all_after('matchactionname{')
-	mut match_function, _ := get_curly_contents(spv_front_trimmed)
-
-	mut branches := map[string]string{}
-	mut branch_name := ''
-	mut branch_content := ''
-
-	// ? can modify this so that it incorporates get_curly_contents()
-	mut depth := 0 
-	for chr in match_function {
-		if chr.ascii_str() == '{' {
-			depth += 1
-		} else if chr.ascii_str() == '}' {
-			depth -= 1
-			if depth == 0 {
-				branches[branch_name] = branch_content
-				branch_name = ''
-				branch_content = ''
- 			}
-		} else if depth == 0 {
-			branch_name += chr.ascii_str()
-		} else {
-			branch_content += chr.ascii_str()
-		}
-	}
-
-	return parse_match_map(mut branches)
-}
-
-fn parse_match_map (mut branches map[string]string) Client {
-
-	mut client := Client{}
-	
-	for name_, mut branch_content in branches {
-		mut method := Method{}
-		mut branch_name := name_.trim_space()
-		if branch_name[0].ascii_str() == "'" {
-			method.name = branch_name.all_after_first("'").all_before_last("'")
-		} else if branch_name[0].ascii_str() == '"'{
-			method.name = branch_name.all_after_first('"').all_before_last('"')
-		} else {
-			method.name = 'else'
-		}
-
-		if method.name == 'else' {
-			break
-		} else if method.name.contains('_flow') == false {
-			output_string := branch_content.all_before(method.name).all_after_last('\n').all_before(':=').trim_space()
-			for output_ in output_string.split(',') {
-				method.add_output(output_.trim_space().trim_left('mut '), '')
+			mut count := 0
+			mut new_import := ''
+			for return_type in table.type_str(function.return_type).trim('()').split(',') {
+				// todo sum type handling
+				method.outputs[count].data_type, new_import = parse_type(return_type.trim_space(), method_file.imports)
+				if new_import != '' && b.imports.any(it==new_import) == false {
+					b.imports << new_import
+				}
+				count += 1
 			}
-			client.spv_methods << method
-		} else {
-			client.flow_methods << method
 		}
 	}
-
-	return client
 }
 
+fn (mut b Builder) read_flows(file_path string) ! {
+	flows_file, table := read_file(file_path)
 
-// This must be called after reading the supervisor file
-// TODO reads the actor file/dir to get the flow methods
-fn (b Builder) read_actor_file () {
-	
-	// todo get all the state access/edit methods
-	// for this, the inputs should be read from the first line of the function definition
-	// the outputs should be read from the receiving variables for the called function (for the names) and from the first line of the function definition for the type
-}
+	functions := flows_file.stmts.filter(it is ast.FnDecl).map(it as ast.FnDecl)
 
-// starts from just within a set of curly brackets ie {* found = true }*
-// ie at the * and continues until the closing bracket associated with the '{' preceeding the star
-// does not return the closing curly bracket
-fn get_curly_contents (text string) (string, string) {
-	mut depth := 1
-	mut count := 0
-	for chr in text {
-		if chr.ascii_str() == '{' {
-			depth += 1
-		} else if chr.ascii_str() == '}' {
-			depth -= 1
+
+	for function in functions {
+		function_name := function.name.all_after_last('.')
+		if b.flow_methods.any(it.name == function_name) {
+			mut method := &b.flow_methods.filter(it.name == function_name)[0]
+
+			for param in function.params {
+		
+				for _, mut input in method.inputs {
+					mut new_import := ''
+					if input.name == param.name {
+						input.data_type, new_import = parse_type(table.type_str(param.typ), flows_file.imports)
+						if new_import != '' && b.imports.any(it==new_import) == false {
+							b.imports << new_import
+						}
+					}
+				}
+			}
 		}
-		if depth == 0 {
-			break
-		}
-		count += 1
 	}
-	return text[0..count], text[(count+1)..(text.len)]
+}
+
+// todo should do a test here which makes sure that everything is valid
+
+fn parse_type (type_name string, imports []ast.Import) (string, string) {
+	// println("*********************************")
+	// println(type_name)
+	mut required_import := ''
+	if type_name.contains('.') {
+		// println("CHECK VALUE --- ${type_name.all_before_last('.').all_after_last('.')}")
+		mut prefix := ''
+		if type_name.contains(']') {
+			prefix = "${type_name.all_before_last(']')}]"
+		}
+		chunks := type_name.all_after_last(']').split('.')
+		short_type := "$prefix${chunks#[-2..].join('.')}"
+		// This gets the appropriate import
+		for import_ in imports {
+			// println("${type_name.all_before_last('.').all_after_last('.')} -- ${import_.alias}")
+			if type_name.all_before_last('.').all_after_last('.') == import_.alias {
+				required_import = import_.mod
+				// println("RECOGNISED --- $short_type --- $required_import")
+				// println("*********************************")
+				return short_type, required_import
+			}
+		}
+		// todo check if sum type and get sum type
+	}
+	// println("NOT RECOGNISED --- $type_name")
+	// println("*********************************")
+	return type_name, ''
+}
+
+fn (mut b Builder) fix_import_types () {
+	for mut method in b.actor_methods {
+		for _, mut input in method.inputs {
+			b.validate_data_type(mut input)
+		}
+		for _, mut output in method.outputs {
+			b.validate_data_type(mut output)
+		}
+	}
+}
+
+fn (mut b Builder) validate_data_type (mut input Data) {
+	type_name := input.data_type
+	mut prefix := ''
+	if type_name.contains(']') {
+		prefix = "${type_name.all_before_last(']')}]"
+	}
+	if type_name.count('.') > 1 {
+		chunks := type_name.all_after_last(']').split('.')
+		input.data_type = "$prefix${chunks#[-2..].join('.')}"
+		new_import := chunks[0..(chunks.len-1)].join('.')
+		if b.imports.any(it==new_import) == false {
+			b.imports << new_import
+		}
+	}
+}
+/*
+pub struct Data {
+pub mut:
+	name        string
+	data_type   string
+	sum_type    string
+	import_stmt string
+}
+*/
+
+fn read_file(file_path string) (&ast.File, &ast.Table) {
+	table := ast.new_table()
+	file_ast := parser.parse_file(file_path, table, .parse_comments, client_builder.fpref)
+	return file_ast, table
 }

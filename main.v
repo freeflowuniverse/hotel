@@ -3,13 +3,23 @@ module main
 // import freeflowuniverse.hotel.library.product
 // import freeflowuniverse.hotel.library.common
 // import freeflowuniverse.hotel.library.finance
-import freeflowuniverse.baobab.jobs {ActionJob}
-import freeflowuniverse.hotel.guest
+// import freeflowuniverse.baobab.jobs {ActionJob}
+// import freeflowuniverse.hotel.guest
+// import freeflowuniverse.hotel.actors.kitchen.kitchen_client
+import freeflowuniverse.hotel.client_builder
+import os
+
+const actors = ['user', 'supervisor', 'kitchen']
 
 fn main() {
-	gs := guest.new_gs()!
+	// gs := guest.new_gs()!
+	mut b := client_builder.Builder{}
+	for actor in actors {
+		b = client_builder.build_client('${os.dir(@FILE)}/actors/${actor}')!
+	}
+	// println(b)
+	
 }
-
 
 /*
 order1 := common.Order{
