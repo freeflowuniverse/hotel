@@ -9,9 +9,8 @@ import freeflowuniverse.hotel.library.common
 
 import time
 
-
-pub struct KitchenFlow {
-pub mut:
+struct KitchenFlow {
+mut:
 	ui ui_client.Client
 	kitchen kitchen_client.Client
 	supervisor supervisor_client.Client
@@ -31,11 +30,11 @@ fn root_flow (kitchen_id string, user_id string) ! {
 		return error("User not recognised. This should never happen!")
 	}
 
-	mut items := ['order', 'exit']
+	mut items := ['order', 'exit', 'view_menu']
 
 	items << match flow.user.user_type {
 		.guest { ['submit_complaint'] }
-		.employee { ['change_menu'] }
+		.employee { ['modify_menu'] }
 	}
 
 	int_choice := flow.ui.ask_dropdown(
@@ -46,8 +45,9 @@ fn root_flow (kitchen_id string, user_id string) ! {
 	choice := items[int_choice]
 	match choice {
 		'order' { flow.order() }
+		'view_menu' {flow.view_menu()}
+		'modify_menu' { flow.modify_menu() } 
 		'submit_complaint' { flow.submit_complaint() }
-		'change_menu' { flow.change_menu() } 
 		'exit' { println("This functionality has not yet been added!") }
 		else {
 			return error("This should never happen!")
@@ -57,9 +57,9 @@ fn root_flow (kitchen_id string, user_id string) ! {
 	root_node(kitchen_id, user_id)
 }
 
-pub struct OrderFlow {
+struct OrderFlow {
 KitchenFlow
-pub mut:
+mut:
 	order common.Order
 	product_amount product.ProductAmount
 }
@@ -154,14 +154,160 @@ fn (mut of OrderFlow) enter_order_time () {
 	date := flow.ui.ask_date("What day and month do you want your order to arrive/start?")
 	println(date)
 	time := flow.ui.ask_time("What time do you want your order to arrive/start?")
-	println(time)
-	// date_time := time.Time{
-	// 	year : time.now().year
-	// 	month : date['month']
-	// 	day: date['day']
-	// 	hour: time['hour']
-	// 	minute: time['minute']
-	// }
+	date_time := time.Time{
+		year : time.now().year
+		month : date['month']
+		day: date['day']
+		hour: time['hour']
+		minute: time['minute']
+	}
 
-	of.order.start = time.now()
+	of.order.start = date_time
+}
+
+struct ViewMenuFlow {
+KitchenFlow
+mut:
+	products []Product // ? maybe change to ProductAmount
+	product_id string
+}
+
+fn (mut flow KitchenFlow) view_menu () {
+	mut vmf := ViewMenuFlow{
+		KitchenFlow: flow
+	}
+
+	vmf.products = vmf.kitchen.get_products()
+	menu := products.map(it.short_str()).join('')
+	vmf.ui.send_message(products.menu())
+	vmf.view_product()
+}
+
+fn (mut vmf ViewMenuFlow) view_product () {
+	view_bool := vmf.ui.ask_yesno("Would you like to view a product in more detail?")
+	if view_bool {
+		vmf.get_product_id()
+		vmf.ui.send_message(vmf.products.filter(it.id==vmf.product_id)[0].stringify())
+		vmf.view_product()
+	}
+}
+
+fn (mut vmf ViewMenuFlow) get_product_id () {
+	vmf.product_id = vmf.ui.ask_string("Please enter the ID of the product you would like to view:")
+	if vmf.products.filter(it.id==vmf.product_id).len == 0 {
+		vmf.ui.send_message("ID not recognised. Please input an ID displayed in the list above")
+		vmf.get_product_id()
+	} 
+}
+
+struct ModifyMenuFlow {
+KitchenFlow
+mut:
+	products []Product // todo make sure all imports are done
+	product Product
+}
+
+fn (mut flow KitchenFlow) modify_menu () {
+	mut mmf := ModifyMenuFlow{
+		KitchenFlow: flow
+	}
+
+	mmf.products = mmf.kitchen.get_products()
+	mmf.perform_modification()
+}
+
+fn (mut mmf ModifyMenuFlow) perform_modification () {
+	add_bool := mmf.ui.ask_yesno("Would you like to add a new product to the menu (as opposed to updating an existing product) ?")
+	if create_bool {
+		mmf.add_product()
+	} else {
+		mmf.update_product()
+	}
+	mmf.product = Product{}
+	another_bool := mmf.ui.ask_yesno("Would you like to perform another modification?")
+	if another_bool {
+		mmf.perform_modification()
+	}
+}
+
+/*
+pub struct Product {
+pub mut:
+    id string // two digit number
+    name string
+	description string
+    state ProductState
+    price money.Money
+    unit Unit
+	tags []ProductTag
+	constituent_products []ProductAmount
+	variable_price bool
+}
+*/
+
+fn (mut mmf ModifyMenuFlow) add_product () {
+	mmf.ui.send_message("You have chosen to add a new product!")
+	mmf.product.name = mmf.ui.ask_string("What is the name of the product?")
+	mmf.product.description = mmf.ui.ask_string("Please give a description of the product?")
+
+	if mmf.ui.ask_yesno("Is the product currently ready to be offered?") == false {
+		mmf.product.state = .planned
+	}
+
+	units := mmf.product.unit.all()
+	choice := mmf.ui.ask_dropdown(
+		question: "Which unit does your product have?"
+		items: units.map(it.str())
+	)
+	mmf.product.unit == units[choice]
+	mmf.add_price()
+	mmf.add_tag()
+	mmf.add_constituent_product()
+}
+
+fn (mut mmf ModifyMenuFlow) add_price () {
+	price_string := mmf.ui.ask_string("What is the price of this product? Please enter a price with both a number and a currency code.")
+	if price := money.amoung_get(price_string) {
+		mmf.product.price == price
+	} else {
+		ui.send_message("Price not identified: ${err}. Please try again.")
+		mmf.add_price()
+	}
+}
+
+fn (mut mmf ModifyMenuFlow) add_tag () {
+	tag_bool := mmf.ui.ask_yesno("Would you like to add a tag to this product?")
+	if tag_bool {
+		tag_name := mmf.ui.ask_string("Please enter the tag name:")
+		
+		if mmf.product.tags.filter(it.name == tag_name).len > 0 {
+			mmf.ui.send_message("A tag with this name already exists")
+		} else {
+			mmf.product.tags << CompanyTag{
+				name: tag_name
+			}
+		}
+		mmf.add_tag()
+	} 
+}
+
+fn (mut mmf ModifyMenuFlow) add_constituent_product () {
+	another_bool := mmf.ui.ask_yesno("Would you like to add a constituent product?")
+	if another_bool {
+		items := mmf.product.map(it.name)
+		mmf.ui.ask_dropdown(
+			question: "Which of the following products would you like to add as a constituent product?"
+			items:
+		)
+	}
+	// todo ask if they want to add a constituent product
+	// todo get the product with ask_dropdown
+	// todo ask for the quantity of that product
+	// todo calculate total_price
+
+}
+
+// todo check how to access the attributes of a v struct
+fn (mut mmf ModifyMenuFlow) update_product () {
+	
 }

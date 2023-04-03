@@ -1,6 +1,7 @@
 module product
 import freeflowuniverse.crystallib.money
 
+// todo decide how units should be organised
 pub enum Unit {
 	ml
 	grams
@@ -9,6 +10,11 @@ pub enum Unit {
 	tsp
 	tbsp
 	person
+	other
+}
+
+pub fn (unit Unit) all () []Unit {
+	return [.ml, .grams, .units, .cups, .tsp, .tbsp, .person, .other]
 }
 
 pub enum ProductState{
@@ -46,7 +52,7 @@ pub mut:
 }
 
 pub fn (p Product) stringify () string {
-	mut product_str := 'ID: $p.id\nName: $p.name\nDescription: $p.description\nState: $p.state\nPrice: ${p.price.val}${p.price.currency.name}\nUnit: $p.unit\n'
+	mut product_str := 'ID: $p.id\nName: $p.name\nDescription: $p.description\nState: $p.state\nPrice: ${p.price.amount}${p.price.currency_code}\nUnit: $p.unit\n'
 	if p.tags.len > 0 {
 		product_str += 'Tags:\n'
 		for tag in p.tags{
