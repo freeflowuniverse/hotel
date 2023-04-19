@@ -17,7 +17,7 @@ const (
 pub fn (mut b Builder) read_actor_dir(dir_path string) ! {
 	b.actor_name = dir_path.split('/').last()
 	$if debug { println("\tReading file actor.v ...") }
-	b.read_actor('${dir_path}/actor.v')!
+	b.read_actor('${dir_path}/actor.v') or {return error("Failed to read actor file at $dir_path/actor.v with error:\n$err")}
 	$if debug { println("\tReading file ${b.actor_name}.v ...") }
 	b.read_methods('${dir_path}/${b.actor_name}.v')!
 	if os.exists('${dir_path}/flows.v') {
@@ -49,17 +49,20 @@ fn (mut b Builder) read_actor(file_path string) ! {
 		}
 		mut output_order := []string{}
 		for stmt in branch.stmts {
-			$if debug { println("\t\t\t\tEvaluating branch statement:  ${stmt.str().split('\n')[0]}") }
+			branch_statement := stmt.str().split('\n')[0]
+			$if debug { println("\t\t\t\tEvaluating branch statement:  $branch_statement") }
 			match stmt {
 				ast.AssignStmt {
-					mut right := stmt.right[0] as ast.CallExpr
-					if stmt.right[0].str().contains('params.get(') {
-						if right.name == 'decode' {
-							right = right.args[1].expr as ast.CallExpr
+					mut cast_right := stmt.right[0] as ast.CallExpr
+					// println("CAST RIGHT STR: ${right.str()}")
+					// println("RIGHT STR: ${stmt.right[0].str()}")
+					if stmt.right[0].str().contains('args.get(') {
+						if cast_right.name == 'decode' {
+							cast_right = cast_right.args[1].expr as ast.CallExpr
 						}
-						$if debug { println("\t\t\t\t\tInput: ${right.args[0].str()}") }
-						method.add_input(right.args[0].str().trim('"').trim("'"), '')
-					} else if stmt.right.str().contains("${b.actor_name}.${method.name}") {
+						$if debug { println("\t\t\t\t\tInput: ${cast_right.args[0].str()}") }
+						method.add_input(cast_right.args[0].str().trim('"').trim("'"), '')
+					} else if stmt.right[0].str().contains("${b.actor_name}.${method.name}") {
 						for result in stmt.left {
 							output_order << result.str()
 							$if debug { println("\t\t\t\t\tOutput: ${result.str()}") }
@@ -76,8 +79,9 @@ fn (mut b Builder) read_actor(file_path string) ! {
 						call_expr := stmt.expr as ast.CallExpr
 						var_name := call_expr.args[0].str().trim('"').trim("'")
 						pos := output_order.index(var_name)
+						$if debug { println("\t\t\t\t\tChecking if var '$var_name' in outputs $output_order") }
 						if pos == -1 {
-							return error('Invalid naming conventions for results and kwargs!')
+							return error("Invalid naming conventions for results and kwargs, '$var_name' could not be found in the outputs of the '$method.name' branch ($output_order). The specific error occured at branch statement:\n - $branch_statement")
 						}
 						method.add_output(var_name, '', pos)
 					} else if stmt.expr.str().starts_with('go ') {

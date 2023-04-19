@@ -8,9 +8,10 @@ pub fn build_client(actor_dir_path string) !Builder {
 	
 	mut b := client_builder.new()
 	$if debug { println("Reading directory at: ${actor_dir_path} ...") }
-	b.read_actor_dir(actor_dir_path)!
+	b.read_actor_dir(actor_dir_path) or {return error("Failed to read actor directory at $actor_dir_path with error:\n$err")}
 	$if debug { println("Writing ${b.actor_name}_client...") }
 	b.write_client(actor_dir_path + '/${b.actor_name}_client/client.v')!
+	$if debug { println(b) }
 	return b
 }
 

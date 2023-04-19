@@ -2,6 +2,8 @@ module client_builder
 
 import os
 
+// ! This is not done yet, I think it is mostly copy pasted code.
+
 pub fn (mut b Builder) write_tests (file_dest_path string) ! {
 	$if debug { println("\tPerforming test file structure preparation ...") }
 	dir := os.dir(file_dest_path)

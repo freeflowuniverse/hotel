@@ -15,7 +15,7 @@ fn main() {
 	// gs := guest.new_gs()!
 	mut b := client_builder.Builder{}
 	for actor in actors {
-		b = client_builder.build_client('${os.dir(@FILE)}/actors/${actor}')!
+		b = client_builder.build_client('${os.dir(@FILE)}/actors/${actor}') or {panic("Failed to build client for $actor actor with error:\n$err")}
 	}
 	// println(b)
 	

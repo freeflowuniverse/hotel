@@ -5,7 +5,7 @@ import json
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.actors.supervisor.supervisor_client
-import freeflowuniverse.hotel.actors.kitchen
+import freeflowuniverse.hotel.library.models
 import freeflowuniverse.hotel.library.product
 import freeflowuniverse.hotel.library.common
 
@@ -47,7 +47,6 @@ pub fn (client KitchenClient) get_products () ![]product.Product  {
 	}
 	return json.decode([]product.Product, response.result.get('products')!)!
 }
-
 
 pub fn (client KitchenClient) order (order common.Order, ) ! {
 	j_args := params.Params{}

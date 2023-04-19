@@ -40,8 +40,32 @@ pub mut:
     price money.Money
     unit Unit
 	tags []ProductTag
-	constituent_products []ProductAmount
+	constituent_products []ProductAmountRef
 	variable_price bool
+	actor_name string
+}
+
+
+// ? Issue 1.1 - Should constituent products be references or full product amounts
+
+ 
+pub fn (product Product) get_constituents_from (products []Product) ![]ProductAmount {
+	mut constituents := []ProductAmount{}
+	for ref in product.constituent_products {
+		targets := products.filter(it.id == ref.product_id)
+		if targets.len == 0 {
+			return error("The product contains constituent products that are not present in the given list of products!")
+		} 
+		constituents << targets[0]
+	}
+	return constituents
+}
+
+
+pub struct ProductAmountRef {
+pub mut:
+	product_id string
+	quantity string
 }
 
 pub struct ProductAmount {

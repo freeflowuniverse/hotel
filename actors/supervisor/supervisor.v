@@ -42,9 +42,8 @@ fn (a SupervisorActor) get_address (actor_name string, actor_id string) !string 
 	address := address_books[0].book[actor_id]
 	if address == '' {
 		return error("Actor ID could not be found.")
-	} else {
-		return address
 	}
+	return address
 }
 
 fn (a SupervisorActor) get_address_book (actor_name string) !map[string]string {

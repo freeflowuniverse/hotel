@@ -35,8 +35,7 @@ pub fn (mut b Builder) generate_client_string () {
 	str += 'import freeflowuniverse.crystallib.params\n'
 	str += 'import freeflowuniverse.baobab.client as baobab_client\n'
 	str += 'import freeflowuniverse.hotel.actors.supervisor.supervisor_client\n'
-	str += 'import freeflowuniverse.hotel.actors.${b.actor_name}\n'
-	// todo import the main actor module
+	str += 'import freeflowuniverse.hotel.library.models\n' 
 	for imp in b.imports {
 		str += 'import ${imp}\n'
 	}

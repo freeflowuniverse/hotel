@@ -25,18 +25,18 @@ fn (mut actor SupervisorActor) execute (mut job ActionJob) ! {
 		'get_address' {
 			actor_name := job.args.get('actor_name')!
 			actor_id := job.args.get('actor_id')!
-			address := actor.get_address(actor_name, actor_id)!
+			address := actor.supervisor.get_address(actor_name, actor_id)!
 			job.result.kwarg_add('address', address) 
 		}
 		'get_address_book' {
 			actor_name := job.args.get('actor_name')!
-			address_book := actor.get_address_book(actor_name)!
+			address_book := actor.supervisor.get_address_book(actor_name)!
 			job.result.kwarg_add('address_book', json.encode(address_book)) 
 		}
 		'find_user' {
-			identifier := job.params.get('identifier')!
-			identifier_type := job.params.get('identifier_type')!
-			user, user_type := actor.find_user(identifier, identifier_type)!
+			identifier := job.args.get('identifier')!
+			identifier_type := job.args.get('identifier_type')!
+			user, user_type := actor.supervisor.find_user(identifier, identifier_type)!
 			job.result.kwarg_add('user', json.encode(models.IUser(user))) // ! Is this a valid casting here?
 			job.result.kwarg_add('user_type', user_type)
 		}

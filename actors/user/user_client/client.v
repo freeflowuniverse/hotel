@@ -5,7 +5,7 @@ import json
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.actors.supervisor.supervisor_client
-import freeflowuniverse.hotel.actors.user
+import freeflowuniverse.hotel.library.models
 import freeflowuniverse.hotel.actors.user
 
 pub struct UserClient {

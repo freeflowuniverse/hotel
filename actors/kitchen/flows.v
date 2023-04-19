@@ -102,7 +102,7 @@ fn (mut of OrderFlow) enter_product_amount () {
 	of.order.product_amounts << of.product_amount
 
 	if of.ui.ask_yesno("Do you want to add another product?") {
-		of.add_product_amount()
+		of.enter_product_amount()
 	}
 }
 
@@ -151,19 +151,27 @@ fn (mut of OrderFlow) enter_order_time () {
 		return
 	} 
 
-	date := flow.ui.ask_date("What day and month do you want your order to arrive/start?")
-	println(date)
-	time := flow.ui.ask_time("What time do you want your order to arrive/start?")
+	order_date := flow.ui.ask_date("What day and month do you want your order to arrive/start?")
+	println(order_date)
+	order_time := flow.ui.ask_time("What time do you want your order to arrive/start?")
 	date_time := time.Time{
 		year : time.now().year
-		month : date['month']
-		day: date['day']
-		hour: time['hour']
-		minute: time['minute']
+		month : order_date['month']
+		day: order_date['day']
+		hour: order_time['hour']
+		minute: order_time['minute']
 	}
 
 	of.order.start = date_time
 }
+
+
+
+
+
+
+
+
 
 struct ViewMenuFlow {
 KitchenFlow
@@ -199,6 +207,14 @@ fn (mut vmf ViewMenuFlow) get_product_id () {
 		vmf.get_product_id()
 	} 
 }
+
+
+
+
+
+
+
+
 
 struct ModifyMenuFlow {
 KitchenFlow
@@ -259,7 +275,7 @@ fn (mut mmf ModifyMenuFlow) add_product () {
 		question: "Which unit does your product have?"
 		items: units.map(it.str())
 	)
-	mmf.product.unit == units[choice]
+	mmf.product.unit = units[choice]
 	mmf.add_price()
 	mmf.add_tag()
 	mmf.add_constituent_product()
@@ -294,10 +310,10 @@ fn (mut mmf ModifyMenuFlow) add_tag () {
 fn (mut mmf ModifyMenuFlow) add_constituent_product () {
 	another_bool := mmf.ui.ask_yesno("Would you like to add a constituent product?")
 	if another_bool {
-		items := mmf.product.map(it.name)
+		items := mmf.products.map(it.name)
 		mmf.ui.ask_dropdown(
 			question: "Which of the following products would you like to add as a constituent product?"
-			items:
+			items: items
 		)
 	}
 	// todo ask if they want to add a constituent product

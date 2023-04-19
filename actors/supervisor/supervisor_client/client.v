@@ -5,8 +5,7 @@ import json
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.actors.supervisor.supervisor_client
-import freeflowuniverse.hotel.actors.supervisor
-// import freeflowuniverse.hotel.actors.user
+import freeflowuniverse.hotel.library.models
 import freeflowuniverse.hotel.library.models
 
 pub struct SupervisorClient {
@@ -21,8 +20,10 @@ pub fn new(supervisor_id string) !SupervisorClient {
 	}
 }
 
-pub fn (client SupervisorClient) get_address () !string  {
+pub fn (client SupervisorClient) get_address (actor_name string, actor_id string, ) !string  {
 	j_args := params.Params{}
+	j_args.kwarg_add('actor_name', actor_name)
+	j_args.kwarg_add('actor_id', actor_id)
 	job := flows.baobab.job_new(
 		action: 'hotel.supervisor.get_address'
 		args: j_args
@@ -34,8 +35,9 @@ pub fn (client SupervisorClient) get_address () !string  {
 	return response.result.get('address')!
 }
 
-pub fn (client SupervisorClient) get_address_book () !map[string]string  {
+pub fn (client SupervisorClient) get_address_book (actor_name string, ) !map[string]string  {
 	j_args := params.Params{}
+	j_args.kwarg_add('actor_name', actor_name)
 	job := flows.baobab.job_new(
 		action: 'hotel.supervisor.get_address_book'
 		args: j_args
