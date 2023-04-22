@@ -9,6 +9,12 @@ struct UserActor {
 	baobab baobab_client.Client
 }
 
+interface IUser {
+	// todo need to add UserCore fields here
+	name string
+	// todo ...
+}
+
 fn new (user models.IUser, id string) UserActor {
 	return UserActor{
 		id: id

@@ -4,6 +4,18 @@ import freeflowuniverse.crystallib.ui.client as ui_client
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.hotel.library.product
 
+// TODO do code generation to put this interface in the client
+pub interface IKitchen {
+pub mut:
+	name string
+	access_levels map[string][]string // map[access_level][]user_id
+	storage_id string
+	products []product.Product
+	ingredients []product.Product
+	telegram_channel string
+	orders []common.Order
+}
+
 // ui can be included but only for one-off sending of messages
 fn (kitchen IKitchen) get_product (product_id string) !(product.Product, string) {
 	product := products.filter(it.id == product_id)
@@ -25,8 +37,13 @@ fn (kitchen IKitchen) order (order common.Order) ! {
 	ui.send_message(order.stringify()) // todo need to make stringify method
 }
 
-fn (kitchen IKitchen) return_state () IKitchen {
-	return kitchen
+
+fn (kitchen IKitchen) get () !string {
+	if kitchen is models.Kitchen {
+		return json.encode(target)
+	} else if kitchen is models.BrandKitchen {
+		return json.encode(target)
+	}
 }
 
 // fn (kitchen IKitchen) create_product (product product.Product) ! {

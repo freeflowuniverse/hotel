@@ -3,7 +3,7 @@ module user
 import freeflowuniverse.baobab.jobs {ActionJob}
 import freeflowuniverse.hotel.actors.user
 
-fn (user IUser) get (identifier string, identifier_type string) !(user.User, string) {
+fn (user IUser) get (identifier string, identifier_type string) !(IUser, string) {
 
 	match identifier_type {
 		'email' {
