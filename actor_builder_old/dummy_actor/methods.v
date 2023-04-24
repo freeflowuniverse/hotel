@@ -23,3 +23,29 @@ pub fn (kitchen IKitchen) order (order common.Order) ! {
 	ui := ui_client.new(kitchen.id, kitchen.telegram_channel)
 	ui.send_message(order.stringify()) // todo need to make stringify method
 }
+
+// +++ CODE GENERATION +++
+// needs model flavors from actor.model
+// needs core struct attributes from actor.model
+// needs import statements for above attributes from actor.model
+
+
+pub fn (kitchen IKitchen) get (kitchen_id string) !string {
+    if kitchen is model.Kitchen {
+		return json.encode(kitchen)
+	} else if kitchen is model.BrandKitchen {
+		return json.encode(kitchen)
+	}
+	panic("This point should never be reached. There is an issue with the code!")
+}
+
+pub interface IKitchen {
+mut:
+	name	string
+	access_levels	string
+	storage_id	string
+	products	[]product.Product
+	ingredients	[]product.Product
+	telegram_channel	string
+	orders	[]common.Order
+}

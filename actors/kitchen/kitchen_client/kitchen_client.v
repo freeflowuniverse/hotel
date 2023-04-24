@@ -5,6 +5,9 @@ import json
 import freeflowuniverse.crystallib.params
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.actors.supervisor.supervisor_client
+import freeflowuniverse.hotel.library.product
+import freeflowuniverse.hotel.library.common
+import freeflowuniverse.hotel.actors.kitchen.model
 
 pub interface IClientKitchen {
 mut:
@@ -81,10 +84,7 @@ pub fn (client KitchenClient) get (kitchen_id string) !IClientKitchen  {
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
-	if decoded := json.decode(models.model.Kitchen, response) {
-		return decoded
-	}
-	if decoded := json.decode(models.model.BrandKitchen, response) {
+	if decoded := json.decode(model.Kitchen, response) {
 		return decoded
 	}
 	return error("Failed to decode kitchen type")

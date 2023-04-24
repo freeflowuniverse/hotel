@@ -1,4 +1,4 @@
-module actor_builder
+module actor_builder_old
 
 import os
 import v.ast
@@ -73,6 +73,13 @@ fn (mut b Builder) write_methods () ! {
 
 	if methods_file.imports.any(it.mod == import_stmt) == false {
 		source_lines.insert(2, 'import $import_stmt')
+	}
+
+	b.core_struct_imports << import_stmt
+	for import_ in b.core_struct_imports.filter(it!='') {
+		if methods_file.imports.any(it.mod == import_) == false {
+			source_lines.insert(2, 'import $import_')
+		}
 	}
 
 	code_gen_line := '// +++++++++ CODE GENERATION BEGINS BELOW +++++++++'
@@ -185,13 +192,15 @@ pub fn (mut b Builder) write_client () ! {
 pub fn (mut b Builder) generate_client_text () {
 	mut str := ''
 
-	// todo get command
-
 	str += 'module ${b.actor_name}_client\n\n'
 	str += 'import json\n\n'
 	str += 'import freeflowuniverse.crystallib.params\n'
 	str += 'import freeflowuniverse.baobab.client as baobab_client\n'
 	str += 'import freeflowuniverse.hotel.actors.supervisor.supervisor_client\n'
+
+	for imp_ in b.core_struct_imports.filter(it!='') {
+		str += 'import $imp_\n'
+	}
 
 	str += '\npub interface IClient${b.actor_name.capitalize()} {\nmut:\n'
 	for name, typ in b.core_struct_attrs {
@@ -248,7 +257,7 @@ pub fn (mut b Builder) generate_client_text () {
 
 		if method.name == 'get' {
 			for flavor in b.instance_flavors {
-				str += '\tif decoded := json.decode(models.$flavor, response) {\n'
+				str += '\tif decoded := json.decode($flavor, response) {\n'
 				str += '\t\treturn decoded\n\t}\n'
 			}
 			str += '\treturn error("Failed to decode ${b.actor_name} type")'

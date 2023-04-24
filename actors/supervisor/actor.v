@@ -1,47 +1,51 @@
 module supervisor
 
-import freeflowuniverse.hotel.library.models
+import freeflowuniverse.baobab.jobs {ActionJob}
 import freeflowuniverse.baobab.client as baobab_client
-
-// keeps a map of addresses of actors 
-// creates new actors
-// reinitialise / delete zombie actors
+import freeflowuniverse.hotel.actors.user.user_client
 
 struct SupervisorActor {
-	id string
-	supervisor models.ISupervisor
+	id	string
+	supervisor	ISupervisor
 	baobab baobab_client.Client
 }
 
-fn (mut a SupervisorActor) run () {
-	// infinite loop
+fn (actor SupervisorActor) run () {
+
 }
 
-fn (mut actor SupervisorActor) execute (mut job ActionJob) ! {
-
-	actionname := job.action.split('.').last()
-
+fn (actor SupervisorActor) execute (mut job ActionJob) ! {
 	match actionname {
+		'create_user' {
+			user_ := json.decode(user_client.IClientUser, job.args.get('user_')!)
+			actor.supervisor.create_user(user_)
+		}
+		'designate_access' {
+			actor.supervisor.designate_access()
+		}
 		'get_address' {
 			actor_name := job.args.get('actor_name')!
 			actor_id := job.args.get('actor_id')!
-			address := actor.supervisor.get_address(actor_name, actor_id)!
-			job.result.kwarg_add('address', address) 
+			string := actor.supervisor.get_address(actor_name, actor_id)
+			job.result.kwarg_add('string', string)
 		}
 		'get_address_book' {
 			actor_name := job.args.get('actor_name')!
-			address_book := actor.supervisor.get_address_book(actor_name)!
-			job.result.kwarg_add('address_book', json.encode(address_book)) 
+			string := actor.supervisor.get_address_book(actor_name)
+			job.result.kwarg_add('string', string)
 		}
 		'find_user' {
 			identifier := job.args.get('identifier')!
 			identifier_type := job.args.get('identifier_type')!
-			user, user_type := actor.supervisor.find_user(identifier, identifier_type)!
-			job.result.kwarg_add('user', json.encode(models.IUser(user))) // ! Is this a valid casting here?
-			job.result.kwarg_add('user_type', user_type)
+			iclientuser, string := actor.supervisor.find_user(identifier, identifier_type)
+			job.result.kwarg_add('iclientuser', json.encode(iclientuser))
+			job.result.kwarg_add('string', string)
 		}
-		else  {
-			return error("Action name not recognised: ${actionname}.")
+		'get' {
+			supervisor_id := job.args.get('supervisor_id')!
+			encoded_supervisor := actor.supervisor.get(supervisor_id)
+			job.result.kwarg_add('encoded_supervisor', encoded_supervisor)
 		}
+		else {job.state = .error}
 	}
 }

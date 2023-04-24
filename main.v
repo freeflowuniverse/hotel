@@ -6,19 +6,18 @@ module main
 // import freeflowuniverse.baobab.jobs {ActionJob}
 // import freeflowuniverse.hotel.guest
 // import freeflowuniverse.hotel.actors.kitchen.kitchen_client
-import freeflowuniverse.hotel.client_builder
+import freeflowuniverse.hotel.actor_builder
 import os
 
 const actors = ['user', 'supervisor', 'kitchen']
 
 fn main() {
-	// gs := guest.new_gs()!
-	mut b := client_builder.Builder{}
-	for actor in actors {
-		b = client_builder.build_client('${os.dir(@FILE)}/actors/${actor}') or {panic("Failed to build client for $actor actor with error:\n$err")}
+	dir_path := os.dir(@FILE) + '/actors'
+	for actor in ['supervisor','kitchen'] {
+		mut builder := actor_builder.new(dir_path + '/' + actor) or { panic("Failed to generate a new builder for $actor with error: $err") }
+		builder.build() or { panic("Failed to execute build with error: $err") }
 	}
-	// println(b)
-	
+
 }
 
 /*

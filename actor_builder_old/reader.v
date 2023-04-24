@@ -1,4 +1,4 @@
-module actor_builder
+module actor_builder_old
 
 import v.ast
 import freeflowuniverse.crystallib.pathlib
@@ -38,7 +38,7 @@ fn (mut b Builder) read_model () ! {
 	core_struct := core_candidates[0]
 	
 	for field in core_struct.fields {
-		data_type, import_string := b.parse_type(table.type_str(field.typ), model_file.imports) or {return error("Failed to parse type with error: $err")}
+		data_type, import_string := b.parse_type(table.type_str(field.typ), model_file.imports, 'model') or {return error("Failed to parse type with error: $err")}
 		b.core_struct_attrs[field.name] = data_type
 		if import_string !in b.core_struct_imports {
 			b.core_struct_imports << import_string
@@ -80,7 +80,7 @@ fn (mut b Builder) read_methods () ! {
 		mut count := 0
 		for param in decl.params[1..] {
 			mut raw_type_str := table.type_str(param.typ)
-			data_type, import_stmt := b.parse_type(raw_type_str, methods_file.imports) or {return error("Failed to parse type with error: $err")}
+			data_type, import_stmt := b.parse_type(raw_type_str, methods_file.imports, b.actor_name) or {return error("Failed to parse type with error: $err")}
 			new_method.inputs[count] = Data{
 				name: param.name
 				data_type: data_type
@@ -91,7 +91,7 @@ fn (mut b Builder) read_methods () ! {
 
 		count = 0
 		for return_type in table.type_str(decl.return_type).trim('()').split(',') { 
-			data_type, import_stmt := b.parse_type(return_type.trim_space(), methods_file.imports) or {return error("Failed to parse type with error: $err")}
+			data_type, import_stmt := b.parse_type(return_type.trim_space(), methods_file.imports, b.actor_name) or {return error("Failed to parse type with error: $err")}
 			if data_type != 'void' {
 				new_method.outputs[count] = Data{
 					name: generate_name(data_type)
@@ -103,7 +103,11 @@ fn (mut b Builder) read_methods () ! {
 			
 		}
 
-		b.actor_methods << new_method
+		// todo this isnt a true solution and will need to be fixed
+		if new_method.name != 'get' {
+			b.actor_methods << new_method
+		}
+		
 	}
 }
 
@@ -111,12 +115,12 @@ fn (mut b Builder) read_methods () ! {
 
 fn read_file(file_path pathlib.Path) (&ast.File, &ast.Table) {
 	table := ast.new_table()
-	file_ast := parser.parse_file(file_path.path, table, .parse_comments, actor_builder.fpref)
+	file_ast := parser.parse_file(file_path.path, table, .parse_comments, actor_builder_old.fpref)
 	return file_ast, table
 }
 
 // todo check for sum type and get sum type
-fn (b Builder) parse_type(type_name_ string, imports []ast.Import) !(string, string) {
+fn (b Builder) parse_type(type_name_ string, imports []ast.Import, source_file_name string) !(string, string) {
 	mut type_name := type_name_
 	mut prefix := ''	
 	if type_name.contains('&') {
@@ -141,7 +145,9 @@ fn (b Builder) parse_type(type_name_ string, imports []ast.Import) !(string, str
 			}
 		}
 
-		if module_name != b.actor_name {
+		if module_name != source_file_name {
+			println(module_name)
+			println(b.actor_name)
 			return error("Please check your types, '$type_name' seems like it is imported, but is not!")
 		}
 	}

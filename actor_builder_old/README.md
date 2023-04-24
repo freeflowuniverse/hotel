@@ -38,7 +38,6 @@ Sequential Steps:
 - add standard methods to client.v (from methods.v)
 - add imports to client.v (from model.v and methods.v)
 
-
 fn read_update_model
 fn read_update_methods 
 fn write_actor

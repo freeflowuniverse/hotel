@@ -1,5 +1,6 @@
 module kitchen
 
+import freeflowuniverse.hotel.actors.kitchen.model
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.hotel.library.product
 
@@ -22,4 +23,30 @@ pub fn (kitchen IKitchen) order (order common.Order) ! {
 	kitchen.orders << order
 	ui := ui_client.new(kitchen.id, kitchen.telegram_channel)
 	ui.send_message(order.stringify()) // todo need to make stringify method
+}
+
+fn (kitchen IKitchen) create_product () ! {}
+
+fn (kitchen IKitchen) edit_product () ! {}
+
+fn (kitchen IKitchen) delete_product () ! {}
+
+// +++++++++ CODE GENERATION BEGINS BELOW +++++++++
+
+pub fn (kitchen IKitchen) get (kitchen_id string) !string {
+    if kitchen is model.Kitchen {
+		return json.encode(kitchen)
+	}
+	panic("This point should never be reached. There is an issue with the code!")
+}
+
+pub interface IKitchen {
+mut:
+	name	string
+	access_levels	string
+	storage_id	string
+	products	[]product.Product
+	ingredients	[]product.Product
+	telegram_channel	string
+	orders	[]common.Order
 }
