@@ -35,7 +35,7 @@ fn (b Builder) write_method (method Method, target_file_name string) !(string, [
 
 	if trimmed_name in ['methods', 'client'] && method.method_type == .get {
 		mut dir_path := b.dir_path
-		file, _ := parse_file(dir_path.join('/model/model.v')!)
+		file, _ := parse_file(dir_path.join('/${b.actor_name}_model/model.v')!)
 		imports << Module{
 			name: file.mod.name // TODO for some reason this returns just model?
 		}
@@ -56,7 +56,7 @@ fn (b Builder) write_get_method_to_methods (method Method) (string, []Module) {
 	gs += write_function_header('I${b.actor_name.capitalize()}', 'get', method.inputs.values(), method.outputs.values(), .result)
 	gs += '\t'
 	for flavor in b.core_interface.flavors {
-		gs += 'if kitchen is $flavor {\n\t\treturn json.encode(kitchen)\n\t} else '
+		gs += 'if i${b.actor_name} is $flavor {\n\t\treturn json.encode(i${b.actor_name})\n\t} else '
 	}
 	gs = gs.trim_right(' else ')
 	gs += '\n\tpanic("This point should never be reached. There is an issue with the code!")\n}'
@@ -127,12 +127,9 @@ fn (b Builder) write_client_method_body (method Method) (string, []Module) {
 fn write_import (import_ Module) ?string {
 	if import_.name != '' {
 		mut stmt := 'import $import_.name'
-		if import_.alias != '' && import_.alias != import_.name {
+		if import_.alias != '' && import_.alias != import_.name.all_after_last('.') {
 			stmt += ' as $import_.alias'
-		} else {
-			return stmt
-		}
-		
+		} 
 		if import_.selections.len != 0 {
 			stmt += ' {'
 			for selection in import_.selections {
@@ -141,6 +138,7 @@ fn write_import (import_ Module) ?string {
 			stmt = stmt.trim_string_right(', ')
 			stmt += '}'
 		}
+		return stmt
 	}
 	return none
 }

@@ -84,16 +84,18 @@ fn (b Builder) parse_nameless_param (type_string string, table &ast.Table, file 
 		short_type = "$prefix${chunks#[-2..].join('.')}"
 		module_name := type_name.all_before_last('.').all_after_last('.')
 		for import_ in file.imports {
-			if module_name == import_.alias {
-				mod.alias = import_.alias
+			if module_name == import_.mod.all_after_last('.') {
 				mod.name = import_.mod
+				if import_.mod.all_after_last('.') != import_.alias {
+					mod.alias = import_.alias
+				}
 			}
 		}
 
 		if module_name == file.mod.short_name { // todo check whether this should be short_name or name
 			mod.name = file.mod.name
-			mod.alias = file.mod.name
 		}
+
 		if mod.name == '' {
 			return error("Please check your types, '$type_name' seems like it is imported, but is not!")
 		}
@@ -149,10 +151,13 @@ fn identify_feature (mut remaining_list []string) []string {
 fn parse_existing_imports (file &ast.File) []Module {
 	mut imports := []Module{}
 	for imp in file.imports {
-		imports << Module{
+		mut mod := Module{
 			name: imp.mod
-			alias: imp.alias
 		}
+		if imp.alias != imp.mod.all_after_last('.') {
+			mod.alias = imp.alias
+		}
+		imports << mod
 	}
 	return imports
 }
@@ -163,10 +168,6 @@ fn (mut b Builder) init_standard_methods (src_module Module) {
 		name: 'get'
 		src_module: src_module
 		method_type: .get
-	}
-	get_method.inputs[0] = Param{
-		name: '${b.actor_name}_id'
-		data_type: 'string'
 	}
 	get_method.outputs[0] = Param{
 		name: 'encoded_${b.actor_name}'

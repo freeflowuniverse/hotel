@@ -56,7 +56,7 @@ fn (b Builder) update_methods (methods_path pathlib.Path, mut file_lines []strin
 		file_lines << fn_str
 	}
 
-	interface_str, interface_imports := b.write_interface(b.core_interface, 'actor')
+	interface_str, interface_imports := b.write_interface(b.core_interface, '')
 	file_lines << interface_str
 	imports.add_many(interface_imports)
 

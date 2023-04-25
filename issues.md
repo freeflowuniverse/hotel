@@ -8,11 +8,11 @@ Should constituent products be a quantity and a product id, or a full product am
 
 ## 2. Actors
 
-### 2.1 Actor Model Import Cycle
+2.1 SOLVED Actor Model Import Cycle
 
 I faced the issue of having multiple import cycles in part because I would need actor models to be used in various clients (for example when requesting a user instance), but then this would almost always clash with the necessary client imports. Therefore, I moved the actor models to the library where it is import only. This problem seems to be solved but now I am unsure what the standard model structure should be.
 
-### 2.2 Actor Flavors
+2.2 SOLVED Actor Flavors
 
 It is necessary to have flavors of different actors, ie employee and guest flavors of the user model. Is the best way to do this with interfaces, embedded structs, attribute structs or by duplicating information?
 

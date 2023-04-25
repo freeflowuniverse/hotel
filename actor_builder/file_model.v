@@ -8,7 +8,7 @@ import os
 
 fn (mut b Builder) parse_update_model () ! {
 	// Accesses all the relevant file and parses it using v.ast
-	model_path := b.dir_path.join('model/model.v')!
+	model_path := b.dir_path.join('${b.actor_name}_model/model.v')!
 	model_file, table := parse_file(model_path)
 	mut file_lines := os.read_lines(model_path.path) or {return error("Failed to read model.v file with error: \n$err")}
 
@@ -24,7 +24,7 @@ fn (mut b Builder) parse_update_model () ! {
 }
 
 
-// This function simply gets the different structs from the model/model.v file. It should also check to make sure the model is valid
+// This function simply gets the different structs from the ACTOR_model/model.v file. It should also check to make sure the model is valid
 fn (mut b Builder) parse_model (model_path pathlib.Path, model_file &ast.File, table &ast.Table) ! {
 	// Gets all the declared structs from the parsed file
 	mut structs := []ast.StructDecl{}
@@ -64,6 +64,5 @@ fn (b Builder) update_model (model_path pathlib.Path, mut file_lines []string) !
 
 	file_lines << inter_str
 	file_str := file_lines.join_lines()
-
 	os.write_file(model_path.path, file_str) or {return error("Failed to write to model.v file with error: \n$err")}
 }

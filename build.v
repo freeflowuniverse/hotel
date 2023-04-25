@@ -1,23 +1,18 @@
 module main
 
-// import freeflowuniverse.hotel.library.product
-// import freeflowuniverse.hotel.library.common
-// import freeflowuniverse.hotel.library.finance
-// import freeflowuniverse.baobab.jobs {ActionJob}
-// import freeflowuniverse.hotel.guest
-// import freeflowuniverse.hotel.actors.kitchen.kitchen_client
 import freeflowuniverse.hotel.actor_builder
 import os
 
 const actors = ['user', 'supervisor', 'kitchen']
 
 fn main() {
-	dir_path := os.dir(@FILE) + '/actors'
-	for actor in ['supervisor','kitchen'] {
-		mut builder := actor_builder.new(dir_path + '/' + actor) or { panic("Failed to generate a new builder for $actor with error: $err") }
+	dir_path := os.dir(@FILE)
+	actor_dir_path := dir_path + '/actors'
+
+	for actor in ['supervisor','kitchen', 'user'] {
+		mut builder := actor_builder.new(actor_dir_path + '/' + actor) or { panic("Failed to generate a new builder for $actor with error: $err") }
 		builder.build() or { panic("Failed to execute build with error: $err") }
 	}
-
 }
 
 /*

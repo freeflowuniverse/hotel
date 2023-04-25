@@ -1,5 +1,4 @@
 module product
-import freeflowuniverse.crystallib.money
 
 // todo decide how units should be organised
 pub enum Unit {
@@ -37,7 +36,7 @@ pub mut:
     name string
 	description string
     state ProductState
-    price money.Money
+    price f64 // usd
     unit Unit
 	tags []ProductTag
 	constituent_products []ProductAmountRef
@@ -72,7 +71,7 @@ pub struct ProductAmount {
 pub mut:
 	product Product // actor_character product_id concatenated
 	quantity string
-	total_price money.Money
+	total_price f64 //usd
 }
 
 pub fn (p Product) stringify () string {

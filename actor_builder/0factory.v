@@ -30,11 +30,10 @@ pub fn new (actor_dir_path string) !Builder {
 }
 
 pub fn (mut b Builder) build () ! {
-	b.parse_update_model() or {return error("Failed to read ${b.actor_name}/model/model.v with error: \n$err")}
+	b.parse_update_model() or {return error("Failed to read ${b.actor_name}/${b.actor_name}_model/model.v with error: \n$err")}
 	b.parse_update_methods() or {return error("Failed to read ${b.actor_name}/methods.v with error: \n$err")}
 	b.write_actor() or {return error("Failed to write actor to ${b.actor_name}/actor.v with error: \n$err")}
 	b.write_client() or {return error("Failed to write client to ${b.actor_name}/client.v with error: \n$err")}
-	println(b)
 }
 
 

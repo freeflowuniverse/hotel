@@ -37,9 +37,11 @@ fn (b Builder) write_client () ! {
 
 fn (b Builder) write_client_boilerplate () (string, []Module) {
 	mut cstr := '\npub struct ${b.actor_name.capitalize()}Client {\n'
-	cstr += '\t${b.actor_name}_address string\n}\n\n'
+	cstr += '\t${b.actor_name}_address\tstring\n'
+	cstr += '\tbaobab\tbaobab_client.Client\n'
+	cstr += '}\n\n'
 	cstr += 'pub fn new(${b.actor_name}_id string) !${b.actor_name.capitalize()}Client {\n'
-	cstr += '\tsupervisor := supervisor_client.new("0")\n'
+	cstr += '\tsupervisor := supervisor_client.new("0") or {return error("Failed to create a new supervisor client with error: \$err")}\n'
 	cstr += '\t${b.actor_name}_address := supervisor.get_address("${b.actor_name}", ${b.actor_name}_id)!\n'
 	cstr += '\treturn ${b.actor_name.capitalize()}Client{\n'
 	cstr += '\t\tbaobab: baobab_client.new()\n\t}\n}\n\n'
