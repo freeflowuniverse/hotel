@@ -3,7 +3,8 @@ module supervisor_client
 /*
 - define client supervisor interface
 - define supervisor client struct
-- (NO new supervisor function)
+- (NO new supervisor function, the supervisor is always made manually, maybe a regular init function tho?)
+- need functions to create_user, create_kitchens
 
 */
 
