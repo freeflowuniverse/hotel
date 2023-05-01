@@ -7,7 +7,7 @@ import freeflowuniverse.crystallib.pathlib
 
 fn (mut b Builder) parse_update_methods () ! {
 	// Accesses all the relevant file and parses it using v.ast
-	methods_path := b.dir_path.join('methods.v')!
+	methods_path := b.dir_path.extend_file('methods.v')!
 
 	mut file_lines := os.read_lines(methods_path.path) or {return error("Failed to read methods.v file with error: \n$err")}
 	code_gen_line := '// +++++++++ CODE GENERATION BEGINS BELOW +++++++++'

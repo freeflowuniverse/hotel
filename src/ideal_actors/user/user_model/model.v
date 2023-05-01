@@ -10,11 +10,13 @@ pub struct Employee {
 	UserCore
 pub mut:
 	title              string
-	actor_ids          []string
+	actor_names          []string
 	shifts             []Shift
 	working            bool
 	holidays_remaining int
 }
+
+
 
 pub struct Shift {
 	id       string
@@ -25,12 +27,12 @@ pub struct Shift {
 
 pub struct UserCore {
 pub mut:
-	telegram_username string
-	id                string
+	telegram_username string // unique
+	id                string // unique
 	firstname         string
 	lastname          string
-	email             string
-	phone_number      string
+	email             string // unique
+	phone_number      string // unique
 	date_of_birth     time.Time
 	allergies         []string
 	preferred_contact string

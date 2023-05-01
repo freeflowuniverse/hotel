@@ -1,7 +1,7 @@
 module kitchen
 
 import kitchen_model
-import freeflowuniverse.hotel.actors.kitchen.kitchen_model
+import freeflowuniverse.hotel.src.ideal_actors.kitchen.kitchen_model
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.hotel.library.product
 import json
@@ -43,6 +43,7 @@ pub fn (ikitchen IKitchen) get() !string {
 }
 
 pub interface IKitchen {
+mut:
 	name string
 	access_levels string
 	storage_id string

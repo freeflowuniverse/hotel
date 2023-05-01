@@ -1,12 +1,12 @@
 module kitchen
 
-import freeflowuniverse.baobab.jobs { ActionJob }
+import freeflowuniverse.baobab.jobs {ActionJob}
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.library.product
 import freeflowuniverse.hotel.library.common
-import json
 
 pub struct KitchenActor {
+pub mut:
 	id      string
 	kitchen IKitchen
 	baobab  baobab_client.Client
@@ -15,7 +15,8 @@ pub struct KitchenActor {
 fn (actor KitchenActor) run() {
 }
 
-fn (actor KitchenActor) execute(mut job ActionJob) ! {
+
+fn (actor KitchenActor) execute (mut job ActionJob) ! {
 	match actionname {
 		'get_product' {
 			product_id := job.args.get('product_id')!
@@ -34,8 +35,7 @@ fn (actor KitchenActor) execute(mut job ActionJob) ! {
 			encoded_kitchen := actor.kitchen.get()
 			job.result.kwarg_add('encoded_kitchen', encoded_kitchen)
 		}
-		else {
-			job.state = .error
-		}
+		else {job.state = .error}
 	}
 }
+

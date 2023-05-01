@@ -8,7 +8,7 @@ import os
 
 fn (mut b Builder) parse_update_model () ! {
 	// Accesses all the relevant file and parses it using v.ast
-	model_path := b.dir_path.join('${b.actor_name}_model/model.v')!
+	model_path := b.dir_path.extend_file('${b.actor_name}_model/model.v')!
 	model_file, table := parse_file(model_path)
 	mut file_lines := os.read_lines(model_path.path) or {return error("Failed to read model.v file with error: \n$err")}
 

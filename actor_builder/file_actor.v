@@ -21,7 +21,7 @@ fn (b Builder) write_actor () ! {
 
 	mut dir_path := b.dir_path
 
-	os.write_file(dir_path.join('actor.v')!.path, file_str) or {return error("Failed to write file with error: $err")}
+	os.write_file(dir_path.extend_file('actor.v')!.path, file_str) or {return error("Failed to write file with error: $err")}
 
 }
 
@@ -44,12 +44,20 @@ fn (b Builder) write_router () !(string, []Module) {
 
 
 fn (b Builder) write_actor_boilerplate () (string, []Module) {
-	mut bstr := "\npub struct ${b.actor_name.capitalize()}Actor {\n"
-	bstr += "\tid\tstring\n"
-	bstr += "\t${b.actor_name}\tI${b.actor_name.capitalize()}\n"
-	bstr += "\tbaobab baobab_client.Client\n}\n\n"
+	name := b.actor_name
+	capital_name := b.actor_name.capitalize()
 
-	bstr += 'fn (actor ${b.actor_name.capitalize()}Actor) run () {\n\n}' // todo fill out
+	bstr := "
+pub struct ${capital_name}Actor {
+pub mut:
+	id      string
+	${name} I${capital_name}
+	baobab  baobab_client.Client
+}
+
+fn (actor ${capital_name}Actor) run() {
+}
+"
 	
 	jobs_mod := Module{
 		name: 'freeflowuniverse.baobab.jobs'
@@ -63,3 +71,4 @@ fn (b Builder) write_actor_boilerplate () (string, []Module) {
 
 	return bstr, [jobs_mod, client_mod]
 }
+

@@ -7,6 +7,7 @@ import freeflowuniverse.hotel.library.common
 import json
 
 pub struct KitchenActor {
+pub mut:
 	id      string
 	kitchen IKitchen
 	baobab  baobab_client.Client

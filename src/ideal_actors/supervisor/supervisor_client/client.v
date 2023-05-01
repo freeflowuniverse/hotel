@@ -1,122 +1,113 @@
 module supervisor_client
 
-/*
-- define client supervisor interface
-- define supervisor client struct
-- (NO new supervisor function, the supervisor is always made manually, maybe a regular init function tho?)
-- need functions to create_user, create_kitchens
-
-*/
-
-
-import freeflowuniverse.hotel.actors.user.user_model
+import freeflowuniverse.hotel.src.ideal_actors.user.user_model
+import freeflowuniverse.hotel.src.ideal_actors.kitchen.kitchen_model
 import supervisor_model
 import json
 import freeflowuniverse.baobab.client as baobab_client
-import freeflowuniverse.hotel.actors.supervisor.supervisor_client
 import freeflowuniverse.crystallib.params
 
 pub interface IClientSupervisor {
+mut:
 	address_books []supervisor_model.AddressBook
 }
 
 pub struct SupervisorClient {
+pub mut:
 	supervisor_address string
 	baobab             baobab_client.Client
 }
 
-pub fn new(supervisor_id string) !SupervisorClient {
-	supervisor := supervisor_client.new('0') or {
-		return error('Failed to create a new supervisor client with error: ${err}')
-	}
-	supervisor_address := supervisor.get_address('supervisor', supervisor_id)!
+pub fn new() !SupervisorClient {
 	return SupervisorClient{
-		baobab: baobab_client.new()
+		supervisor_address: '0'
+		baobab: baobab_client.new('0') or {return error("Failed to create new baobab client with error: \n$err")}
 	}
 }
 
-pub fn (supervisorclient SupervisorClient) create_user(user_ user_model.IModelUser) ! {
-	j_args := params.Params{}
-	j_args.kwarg_add('user_', json.encode(user_))
-	job := flows.baobab.job_new(
+pub fn (mut supervisorclient SupervisorClient) create_user(user_instance user_model.IModelUser) ! {
+	mut j_args := params.Params{}
+	j_args.kwarg_add('user_instance', json.encode(user_instance))
+	mut job := supervisorclient.baobab.job_new(
 		action: 'hotel.supervisor.create_user'
 		args: j_args
 	)!
-	response := client.baobab.job_schedule_wait(job, 100)!
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
 	return
 }
 
-pub fn (supervisorclient SupervisorClient) designate_access() ! {
-	j_args := params.Params{}
-	job := flows.baobab.job_new(
-		action: 'hotel.supervisor.designate_access'
+pub fn (mut supervisorclient SupervisorClient) create_kitchen (kitchen_instance kitchen_model.IModelKitchen) ! {
+	mut j_args := params.Params{}
+	j_args.kwarg_add('kitchen_instance', json.encode(kitchen_instance))
+	mut job := supervisorclient.baobab.job_new(
+		action: 'hotel.supervisor.create_kitchen'
 		args: j_args
 	)!
-	response := client.baobab.job_schedule_wait(job, 100)!
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
 	return
 }
 
-pub fn (supervisorclient SupervisorClient) get_address(actor_name string, actor_id string) !string {
-	j_args := params.Params{}
+pub fn (mut supervisorclient SupervisorClient) get_address(actor_name string, actor_id string) !string {
+	mut j_args := params.Params{}
 	j_args.kwarg_add('actor_name', actor_name)
 	j_args.kwarg_add('actor_id', actor_id)
-	job := flows.baobab.job_new(
+	mut job := supervisorclient.baobab.job_new(
 		action: 'hotel.supervisor.get_address'
 		args: j_args
 	)!
-	response := client.baobab.job_schedule_wait(job, 100)!
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
-	return response.result.get('string')!
+	return response.result.get('address')!
 }
 
-pub fn (supervisorclient SupervisorClient) get_address_book(actor_name string) !string {
-	j_args := params.Params{}
+pub fn (mut supervisorclient SupervisorClient) get_address_book(actor_name string) !map[string]string {
+	mut j_args := params.Params{}
 	j_args.kwarg_add('actor_name', actor_name)
-	job := flows.baobab.job_new(
+	mut job := supervisorclient.baobab.job_new(
 		action: 'hotel.supervisor.get_address_book'
 		args: j_args
 	)!
-	response := client.baobab.job_schedule_wait(job, 100)!
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
-	return response.result.get('string')!
+	return json.decode(map[string]string, response.result.get('address_book')!)!
 }
 
-pub fn (supervisorclient SupervisorClient) find_user(identifier string, identifier_type string) !(user_model.IModelUser, string) {
-	j_args := params.Params{}
-	j_args.kwarg_add('identifier', identifier)
-	j_args.kwarg_add('identifier_type', identifier_type)
-	job := flows.baobab.job_new(
-		action: 'hotel.supervisor.find_user'
+pub fn (mut supervisorclient SupervisorClient) edit_address_book(actor_name string, address_book map[string]string) ! {
+	mut j_args := params.Params{}
+	j_args.kwarg_add('actor_name', actor_name)
+	j_args.kwarg_add('address_book', json.encode(address_book))
+	mut job := supervisorclient.baobab.job_new(
+		action: 'hotel.supervisor.get_address_book'
 		args: j_args
 	)!
-	response := client.baobab.job_schedule_wait(job, 100)!
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
 	if response.state == .error {
 		return error('Job returned with an error')
 	}
-	return json.decode(user_model.IModelUser, response.result.get('imodeluser')!)!, response.result.get('string')!
+	return
 }
 
-pub fn (supervisorclient SupervisorClient) get() !IClientSupervisor {
-	j_args := params.Params{}
-	job := flows.baobab.job_new(
+pub fn (mut supervisorclient SupervisorClient) get() !IClientSupervisor {
+	mut j_args := params.Params{}
+	mut job := supervisorclient.baobab.job_new(
 		action: 'hotel.supervisor.get'
 		args: j_args
 	)!
-	response := client.baobab.job_schedule_wait(job, 100)!
-	if response.state == .error {
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
+	if response.state == .error { // todo this will need to be fixed up
 		return error('Job returned with an error')
 	}
-	if decoded := json.decode(supervisor_model.Supervisor, response) {
+	if decoded := json.decode(supervisor_model.Supervisor, response.result.get('encoded_supervisor')!) {
 		return decoded
 	}
 	return error('Failed to decode supervisor type')

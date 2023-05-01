@@ -35,7 +35,7 @@ fn (b Builder) write_method (method Method, target_file_name string) !(string, [
 
 	if trimmed_name in ['methods', 'client'] && method.method_type == .get {
 		mut dir_path := b.dir_path
-		file, _ := parse_file(dir_path.join('/${b.actor_name}_model/model.v')!)
+		file, _ := parse_file(dir_path.extend_file('/${b.actor_name}_model/model.v')!)
 		imports << Module{
 			name: file.mod.name // TODO for some reason this returns just model?
 		}
@@ -84,45 +84,57 @@ fn (b Builder) write_get_method_to_client (method Method) (string, []Module) {
 }
 
 fn (b Builder) write_method_to_client (method Method) (string, []Module) {
-	mut mstr := write_function_header('${b.actor_name.capitalize()}Client', method.name, method.inputs.values(), method.outputs.values(), .result)
-	bstr, imports := b.write_client_method_body(method)
-	mstr += bstr
-
-	mstr += '\treturn '
+	header := write_function_header('${b.actor_name.capitalize()}Client', method.name, method.inputs.values(), method.outputs.values(), .result)
+	body, imports := b.write_client_method_body(method)
+	mut outputs := '\treturn '
 	for _, data in method.outputs {
 		if data.data_type.contains('.') {
-			mstr += "json.decode(${data.data_type}, response.result.get('${data.name}')!)!, "
+			outputs += "json.decode(${data.data_type}, response.result.get('${data.name}')!)!, "
 		} else {
-			mstr += "response.result.get('${data.name}')!, "
+			outputs += "response.result.get('${data.name}')!, "
 		}
 	}
-	mstr = mstr.trim_right(', ')
-	mstr += '\n}\n\n'
+	outputs = outputs.trim_right(', ')
+	mstr := "
+${header}
+${body}
+${outputs}
+}
+
+"
 	return mstr, imports
 }
 
 
 fn (b Builder) write_client_method_body (method Method) (string, []Module) {
 	mut imports := []Module{}
-	mut bstr := '\tj_args := params.Params{}\n'
+	name := b.actor_name
+	method_name := method.name
+	mut inputs := ''
 	for _, param in method.inputs {
 		if param.data_type.contains('.') {
-			bstr += "\tj_args.kwarg_add('${param.name}', json.encode(${param.name}))\n"
+			inputs += "\tj_args.kwarg_add('${param.name}', json.encode(${param.name}))\n"
 			imports.add(param.src_module)
 		} else {
-			bstr += "\tj_args.kwarg_add('${param.name}', ${param.name})\n"
+			inputs += "\tj_args.kwarg_add('${param.name}', ${param.name})\n"
 		}
 	}
-	bstr += '\tjob := flows.baobab.job_new(\n'
-	bstr += "\t\taction: 'hotel.${b.actor_name}.${method.name}'\n"
-	bstr += '\t\targs: j_args\n'
-	bstr += '\t)!\n'
-	bstr += '\tresponse := client.baobab.job_schedule_wait(job, 100)!\n'
-	bstr += '\tif response.state == .error {\n'
-	bstr += "\t\treturn error('Job returned with an error')\n\t}\n"
+	bstr := "mut j_args := params.Params{}
+	${inputs}
+	mut job := ${name}client.baobab.job_new(
+		action: 'hotel.${name}.${method_name}'
+		args: j_args
+	)!
+	response := ${name}client.baobab.job_schedule_wait(mut job, 100)!
+	if response.state == .error {
+		return error('Job returned with an error')
+	}
+	"
 
 	return bstr, imports
 }
+
+
 
 fn write_import (import_ Module) ?string {
 	if import_.name != '' {

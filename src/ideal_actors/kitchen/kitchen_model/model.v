@@ -22,7 +22,7 @@ pub mut:
 
 pub interface IModelKitchen {
 	name string
-	access_levels string
+	access_levels map[string][]string
 	storage_id string
 	products []product.Product
 	ingredients []product.Product

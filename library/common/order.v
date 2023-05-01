@@ -14,7 +14,7 @@ pub mut:
 	for_id string // who is the order for?
 	orderer_id string // who made the order? employee or guest?
     start time.Time // desired time for order to arrive or for booking to start
-	product_amounts []product.ProductAmount
+	product_amounts []product.ProductAmountRef
 	note string
 	// additional_attributes []Attribute // extras like room service or for boat with captain or without captain
 	order_status OrderStatus // open, closed, cancelled
@@ -39,21 +39,21 @@ pub struct Attribute {
 
 // todo replace stringify method with stringify function
 
-pub fn (order Order) stringify () string {
-	mut ordstr := 'Order ID: $order.id\nOrdered: ${order.start.relative()}\n'
-	if order.note != '' {
-		ordstr += 'Note: $order.note\n'
-	}
-	// if order.additional_attributes.len != 0 {
-	// 	ordstr += 'Additional Attributes:\n'
-	// 	for attr in order.additional_attributes {
-	// 		ordstr += ' - ${attr.key.capitalize()}: $attr.value\n'
-	// 	}
-	// }
-	ordstr += 'Products:\n'
-	for pa in order.product_amounts {
-		ordstr += ' - $pa.quantity x $pa.product.name\n'
-	}
-	return ordstr
-}
+// pub fn (order Order) stringify () string {
+// 	mut ordstr := 'Order ID: $order.id\nOrdered: ${order.start.relative()}\n'
+// 	if order.note != '' {
+// 		ordstr += 'Note: $order.note\n'
+// 	}
+// 	// if order.additional_attributes.len != 0 {
+// 	// 	ordstr += 'Additional Attributes:\n'
+// 	// 	for attr in order.additional_attributes {
+// 	// 		ordstr += ' - ${attr.key.capitalize()}: $attr.value\n'
+// 	// 	}
+// 	// }
+// 	ordstr += 'Products:\n'
+// 	for pa in order.product_amounts {
+// 		ordstr += ' - $pa.quantity x $pa.product.name\n'
+// 	}
+// 	return ordstr
+// }
 

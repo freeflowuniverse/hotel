@@ -1,10 +1,10 @@
 module kitchen
 
-import freeflowuniverse.hotel.actors.supervisor.supervisor_client
-import freeflowuniverse.hotel.actors.kitchen.kitchen_client
+import freeflowuniverse.hotel.src.ideal_actors.supervisor.supervisor_client
+import freeflowuniverse.hotel.src.ideal_actors.kitchen.kitchen_client
 import freeflowuniverse.crystallib.ui as ui_client
 import freeflowuniverse.hotel.library.product
-import freeflowuniverse.hotel.actors.user
+import freeflowuniverse.hotel.src.ideal_actors.user
 import freeflowuniverse.hotel.library.common
 import time
 

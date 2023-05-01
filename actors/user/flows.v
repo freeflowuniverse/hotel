@@ -2,7 +2,9 @@ module user
 
 import freeflowuniverse.hotel.actors.kitchen.kitchen_client
 
-fn (user IUser) start_app(user_id string) {
+
+fn (user IUser) start_app (user_id string) {
+
 	mut ui := ui_client.new(user_id, user_id)
 
 	// todo do code generation for this
@@ -10,7 +12,7 @@ fn (user IUser) start_app(user_id string) {
 		0: 'Kitchen'
 		1: 'Your Account'
 	}
-	response := ui.ask_dropdown('Which flow would you like to enter?', flow_options)
+	response := ui.ask_dropdown("Which flow would you like to enter?", flow_options)
 
 	// todo there is an issue here insofar as you dont know which kitchen to enter.
 	/*
@@ -32,19 +34,18 @@ fn (user IUser) start_app(user_id string) {
 
 	match flow_options[response] {
 		'Kitchen' {
-			kitchen := kitchen_client.new(kitchen_id)
+			kitchen := kitchen_client.new(kitchen_id)	
 			kitchen.root_flow(user_id)!
-		}
-		'Your Account' {
-			account_manager_flow(user_id)!
-		}
+			}
+		'Your Account' {account_manager_flow(user_id)!}
 		else {
-			panic('Error: You should never get this error, ui.ask_dropdown failed to check valid input or flow incorrectly designed.')
-		}
+			panic("Error: You should never get this error, ui.ask_dropdown failed to check valid input or flow incorrectly designed.")
+		}	
 	}
 }
 
-fn account_manager_flow(user_id string) ! {
+fn account_manager_flow (user_id string) ! {
+
 	mut ui := ui_client.new(user_id, user_id)
 
 	// todo do code generation for this
@@ -52,22 +53,18 @@ fn account_manager_flow(user_id string) ! {
 		0: 'Change Account Details'
 		1: 'Go Back'
 	}
-	response := ui.ask_dropdown('What would you like to do?', flow_options)
-
+	response := ui.ask_dropdown("What would you like to do?", flow_options)
+	
 	match flow_options[response] {
-		'Change Account Details' {
-			change_account_details_flow(user_id)!
-		}
-		'Go Back' {
-			main_flow(user_id)!
-		}
+		'Change Account Details' {change_account_details_flow(user_id)!}
+		'Go Back' {main_flow(user_id)!}
 		else {
-			panic('Error: You should never get this error, ui.ask_dropdown failed to check valid input or flow incorrectly designed.')
-		}
+			panic("Error: You should never get this error, ui.ask_dropdown failed to check valid input or flow incorrectly designed.")
+		}	
 	}
 }
 
-fn change_account_details_flow(user_id string) ! {
+fn change_account_details_flow (user_id string) ! {
 	mut ui := ui_client.new(user_id, user_id)
 	edit_options := {
 		0: 'Name'
@@ -79,51 +76,52 @@ fn change_account_details_flow(user_id string) ! {
 		6: 'Telegram Username'
 		7: 'Go Back'
 	}
-
-	response := ui.ask_dropdown('Which attribute would you like to edit?', edit_options)
-
+	
+	response := ui.ask_dropdown("Which attribute would you like to edit?", edit_options)
+	
 	mut attribute := ''
 	mut value := ''
 
 	match flow_options[response] {
 		'Name' {
 			attribute = 'name'
-			value = ui.ask_string('What would you like to change your name to?')
-		}
+			value = ui.ask_string("What would you like to change your name to?")
+			}
 		'Email' {
 			attribute = 'email'
-			value = ui.ask_email('What would you like to change your email to?')
-		}
+			value = ui.ask_email("What would you like to change your email to?")
+			}
 		'Phone Number' {
 			attribute = 'phone_number'
-			value = ui.ask_phone_number('What would you like to change your phone number to?')
+			value = ui.ask_phone_number("What would you like to change your phone number to?")
 		}
 		'Date of Birth' {
 			attribute = 'date_of_birth'
-			value = ui.ask_date('What would you like to change your date of birth to?')
+			value = ui.ask_date("What would you like to change your date of birth to?")
 		}
 		'Allergies' {
-			// todo
+			// todo 
 		}
 		'Preferred Route of Contact' {
 			// todo
 		}
 		'Telegram Username' {
 			attribute = 'telegram_username'
-			value = ui.ask_string('What would you like to change your telegram username to?')
+			value = ui.ask_string("What would you like to change your telegram username to?")
 		}
 		'Go Back' {
 			user_client.account_manager_flow(user_id)!
 		}
 		else {
-			panic('Error: You should never get this error, ui.ask_dropdown failed to check valid input or flow incorrectly designed.')
-		}
+			panic("Error: You should never get this error, ui.ask_dropdown failed to check valid input or flow incorrectly designed.")
+		}	
 	}
 
 	user := user_client.new(user_id)
 	user.edit(attribute, value)
+	
 }
-
+ 
 // fn view_flow_options (user_id string) ! {
 // 	mut ui :=  ui_client.new(user_id)!
 
@@ -131,7 +129,7 @@ fn change_account_details_flow(user_id string) ! {
 // 	// todo present all these options to the user in a dropdown list or inline menu
 // }
 
-// flow_method
+//flow_method
 // fn change_full_name (user_id string) ! {
 // 	mut ui := ui_client.new(user_id)!
 

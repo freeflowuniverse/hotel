@@ -1,20 +1,21 @@
 module supervisor
 
-import freeflowuniverse.baobab.jobs { ActionJob }
+import freeflowuniverse.baobab.jobs {ActionJob}
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.actors.user.user_model
-import json
 
 pub struct SupervisorActor {
-	id         string
+pub mut:
+	id      string
 	supervisor ISupervisor
-	baobab     baobab_client.Client
+	baobab  baobab_client.Client
 }
 
 fn (actor SupervisorActor) run() {
 }
 
-fn (actor SupervisorActor) execute(mut job ActionJob) ! {
+
+fn (actor SupervisorActor) execute (mut job ActionJob) ! {
 	match actionname {
 		'create_user' {
 			user_ := json.decode(user_model.IModelUser, job.args.get('user_')!)
@@ -45,8 +46,7 @@ fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 			encoded_supervisor := actor.supervisor.get()
 			job.result.kwarg_add('encoded_supervisor', encoded_supervisor)
 		}
-		else {
-			job.state = .error
-		}
+		else {job.state = .error}
 	}
 }
+
