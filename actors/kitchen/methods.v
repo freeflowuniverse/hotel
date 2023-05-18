@@ -3,6 +3,7 @@ module kitchen
 import freeflowuniverse.hotel.actors.kitchen.kitchen_model
 import json
 
+
 import freeflowuniverse.hotel.library.common
 import freeflowuniverse.hotel.library.product
 
@@ -32,6 +33,7 @@ fn (kitchen IKitchen) create_product () ! {}
 fn (kitchen IKitchen) edit_product () ! {}
 
 fn (kitchen IKitchen) delete_product () ! {}
+
 
 
 pub interface IKitchen {

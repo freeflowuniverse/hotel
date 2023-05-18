@@ -160,8 +160,6 @@ pub fn (mut b ActorBuilder) get_attribute_client() !Chunk {
 	for param in params {
 		body = "\tmut encoded := ${b.actor_name}_client.get_attribute('${param.name}')\n\treturn "
 		if param.data_type.contains_any('.[]') { // TODO check if this is comprehensive
-			// println(param.data_type)
-			// println('json.decode(${param.data_type}, encoded)!')
 			body += 'json.decode(${param.data_type}, encoded)!'
 		} else if param.data_type == 'string' {
 			body += 'encoded.trim(\'"\').trim("\'")'

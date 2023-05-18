@@ -5,8 +5,8 @@ module supervisor
 import freeflowuniverse.hotel.actors.supervisor.supervisor_model
 import json
 import freeflowuniverse.baobab.client as baobab_client
-import freeflowuniverse.hotel.actors.user
 import freeflowuniverse.hotel.actors.kitchen
+import freeflowuniverse.hotel.actors.user
 
 pub interface ISupervisor {
 mut:
@@ -67,15 +67,15 @@ pub fn (isupervisor ISupervisor) get() !string {
 }
 
 
-pub fn (isupervisor ISupervisor) create_user(user_instance user.IUser) {
-	id := isupervisor.generate_id('user')! 
-	mut new_user := user.new(id, user_instance)!
-	spawn new_user.run()
-}
-
 pub fn (isupervisor ISupervisor) create_kitchen(kitchen_instance kitchen.IKitchen) {
 	id := isupervisor.generate_id('kitchen')! 
 	mut new_kitchen := kitchen.new(id, kitchen_instance)!
 	spawn new_kitchen.run()
+}
+
+pub fn (isupervisor ISupervisor) create_user(user_instance user.IUser) {
+	id := isupervisor.generate_id('user')! 
+	mut new_user := user.new(id, user_instance)!
+	spawn new_user.run()
 }
 

@@ -26,6 +26,7 @@ pub fn new_actor (dir_path_ pathlib.Path, actors_import_root string) !ActorBuild
 	}
 	for file_name in ['methods.v', 'model.v'] {
 		if file_names.contains(file_name) == false {
+			println(file_names)
 			return error("This directory must have a file named '${file_name}'!")
 		}
 	}
