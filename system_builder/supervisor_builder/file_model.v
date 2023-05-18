@@ -1,6 +1,5 @@
 module supervisor_builder
 
-import os
 import actor_builder as ab
 
 fn (mut sb SupervisorBuilder) create_model () ! {

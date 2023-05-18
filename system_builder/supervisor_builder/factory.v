@@ -17,7 +17,8 @@ pub mut:
 	flavors []string
 }
 
-pub fn new_supervisor (dir_path pathlib.Path, actors_root string) !SupervisorBuilder {
+pub fn new_supervisor (dir_path_ pathlib.Path, actors_root string) !SupervisorBuilder {
+	mut dir_path := dir_path_
 	if dir_path.exist != .yes {
 		os.mkdir(dir_path.path)!
 		dir_path.check()
