@@ -1,74 +1,155 @@
 module actor_builder
 
-import os
-
-fn (b Builder) write_actor () ! {
-
-	mut actor_content := File{
-		mod: b.actor_name
+fn (mut b Builder) create_actor() ! {
+	mut actor_file := File{
+		mod: '${b.actor_name}'
+		path: b.dir_path.extend_file('actor.v')!
 	}
+	attributes := [Param{
+		name: 'id'
+		data_type: 'string'
+	}, Param{
+		name: '${b.actor_name}'
+		data_type: 'I${b.actor_name.capitalize()}'
+	}, Param{
+		name: 'baobab'
+		data_type: 'baobab_client.Client'
+		src_module: Module{
+			name: 'freeflowuniverse.baobab.client'
+			alias: 'baobab_client'
+		}
+	}]
 
-	boilerplate_str, boilerplate_imports := b.write_actor_boilerplate()
-	actor_content.content << boilerplate_str
-
-	router_str, router_imports := b.write_router() or {return error("Failed to writer router with error: \n$err")}
-	actor_content.content << router_str
-
-	actor_content.imports.add_many(boilerplate_imports, router_imports)
-	actor_content.imports = actor_content.imports.filter(it.name!='')
-
-	file_str := actor_content.write()
-
-	mut dir_path := b.dir_path
-
-	os.write_file(dir_path.extend_file('actor.v')!.path, file_str) or {return error("Failed to write file with error: $err")}
-
+	actor_file.add(make_object('${b.actor_name.capitalize()}Actor', attributes, true,
+		false))
+	actor_file.add(b.new_actor())
+	actor_file.add(b.run_actor())
+	actor_file.add(b.router_actor()!)
+	actor_file.write_file()!
 }
 
-fn (b Builder) write_router () !(string, []Module) {
+fn (b Builder) new_actor() Chunk {
+	body := "return ${b.actor_name.capitalize()}Actor {
+	id: id
+	${b.actor_name}: ${b.actor_name}_instance
+	baobab: baobab_client.new('0') or {return error('Failed to create baobab client with error: \\n\$err')}
+}"
+
+	func, _ := make_function(
+		name: 'new'
+		inputs: [
+			Param{
+				name: '${b.actor_name}_instance'
+				data_type: 'I${b.actor_name.capitalize()}'
+			},
+			Param{
+				name: 'id'
+				data_type: 'string'
+			},
+		]
+		public: true
+		body: indent(body, 1)
+		type_: .result
+	)
+
+	imports := [
+		Module{
+			name: 'freeflowuniverse.baobab.client'
+			alias: 'baobab_client'
+		},
+	]
+	return Chunk{func, imports}
+}
+
+fn (b Builder) router_actor() !Chunk {
 	mut imports := []Module{}
-
-	mut rstr := 'fn (actor ${b.actor_name.capitalize()}Actor) execute (mut job ActionJob) ! {\n'
-	// todo parse actionname from job
-	rstr += '\tmatch actionname {\n'
-
-	for method in b.actor_methods {
-		method_str, method_imports := b.write_method(method, 'actor') or {return error("Failed to write actor method with error: \n$err")}
-		rstr += method_str
-		imports.add_many(method_imports)
+	mut branches := []string{}
+	// router_branch (actor_name string, name string, inputs []Params, outputs []Params)
+	for m in b.actor_methods {
+		if m.name == 'delete' {
+			branches << "'delete' {\n\tpanic('This actor has been deleted!')\n}"
+		} else {
+			chunk := router_branch(b.actor_name, m)
+			branches << chunk.content
+			imports.add_many(chunk.imports)
+		}
 	}
-	rstr += '\t\telse {job.state = .error}\n\t}\n}'
-
-	return rstr, imports
-}
-
-
-fn (b Builder) write_actor_boilerplate () (string, []Module) {
-	name := b.actor_name
-	capital_name := b.actor_name.capitalize()
-
-	bstr := "
-pub struct ${capital_name}Actor {
-pub mut:
-	id      string
-	${name} I${capital_name}
-	baobab  baobab_client.Client
-}
-
-fn (actor ${capital_name}Actor) run() {
-}
-"
 	
-	jobs_mod := Module{
-		name: 'freeflowuniverse.baobab.jobs'
-		selections: ['ActionJob']
-	}
 
-	client_mod := Module{
-		name: 'freeflowuniverse.baobab.client'
-		alias: 'baobab_client'
-	}
+	body := "actionname := job.action.all_after_last('.')
+match actionname {
+${indent(branches.join_lines(),
+		1)}
+	else { return error(\"Could not identify the method name: '\$actionname' !\") }
+}"
 
-	return bstr, [jobs_mod, client_mod]
+	mut router_str, router_imports := make_function(
+		name: 'execute'
+		receiver: Param{
+			name: 'actor'
+			data_type: '${b.actor_name.capitalize()}Actor'
+		} // TODO check mut receiver
+		inputs: [
+			Param{
+				name: 'job'
+				data_type: 'baobab_jobs.ActionJob'
+				src_module: Module{
+					name: 'freeflowuniverse.baobab.jobs'
+					alias: 'baobab_jobs'
+				}
+			},
+		]
+		public: true
+		body: indent(body, 1)
+		type_: .result
+	)
+
+	return Chunk{router_str, router_imports}
 }
 
+fn router_branch(actor_name string, method Method) Chunk {
+	mut imports := []Module{}
+	mut input_stmts := []string{}
+	mut output_stmts := []string{}
+	for input in method.inputs {
+		mut parsed := "job.args.get('${input.name}')!"
+		if input.data_type.contains('.') {
+			parsed = 'json.decode(${input.data_type}, ${parsed})!'
+		}
+		parsed = '${input.name} := ${parsed}'
+		imports.add_many([input.src_module])
+		input_stmts << parsed
+	}
+	for output in method.outputs {
+		mut stmt := output.name
+		if output.data_type.contains('.') {
+			stmt = 'json.encode(${stmt})'
+		}
+		stmt = "job.result.kwarg_add('${output.name}', ${stmt})"
+		output_stmts << stmt
+	}
+	mut outputs := ''
+	if method.outputs.len != 0 {
+		outputs = "${method.outputs.map(it.name).join(', ')} := "
+	}
+	mut branch_string := "'${method.name}' {
+	${input_stmts.join('\n\t')}
+	${outputs}actor.${actor_name}.${method.name}(${method.inputs.map(it.name).join(', ')})
+	${output_stmts.join('\n\t')}
+}"
+	return Chunk{branch_string, imports}
+}
+
+fn (b Builder) run_actor() Chunk {
+	func, imports := make_function(
+		name: 'run'
+		receiver: Param{
+			name: 'actor'
+			data_type: '${b.actor_name.capitalize()}Actor'
+		}
+		public: true
+		body: indent('for {}', 1)
+	)
+
+	return Chunk{func, imports}
+}

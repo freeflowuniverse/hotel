@@ -1,151 +1,68 @@
 module actor_builder
 
-fn (b Builder) write_interface (inter Interface, name string) (string, []Module) {
-	mut imports := []Module{}
-	mut interface_str := '\npub interface I${name.capitalize()}${b.actor_name.capitalize()} {\n'
-	for param in inter.attrs {
-		interface_str += '\t${param.name}\t${param.data_type}\n'
-		imports.add(param.src_module)
+import os
+import freeflowuniverse.crystallib.pathlib
+
+// TODO cant use a regular builder, because for loop needs names of all actors
+// fn (mut b Builder) new_supervisor () (string, []Module) {
+// 	new_supervisor_func := "pub fn new() !SupervisorActor {
+// 	supervisor := supervisor_model.Supervisor{}
+
+// 	for actor in ['user'] {
+// 		supervisor.address_books << supervisor_model.AddressBook{actor_name: actor}
+// 	}
+
+// 	mut supervisor_actor := SupervisorActor{
+// 		id: '0'
+// 		supervisor: supervisor
+// 		baobab: baobab_client.new()
+// 	}
+
+// 	return supervisor_actor
+// }"
+// 	imports := [Module{name: 'freeflowuniverse.baobab.client', alias: 'baobab_client'}, Module{name: 'freeflowuniverse.hotel.actors.supervisor.supervisor_model'}]
+// 	return new_supervisor_func, imports
+// }
+
+fn append_create_file(mut file_path pathlib.Path, content string, imports []Module) ! {
+	mut file_cont := ''
+	if file_path.exists() {
+		file_cont = os.read_file(file_path.path) or {
+			return error('Failed to read file content with error: \n${err}')
+		}
+	} else if !os.exists(file_path.path_dir()) {
+		os.mkdir_all(file_path.path_dir())!
 	}
-	interface_str += '}'
-	return interface_str, imports
-}
 
-fn (b Builder) write_method (method Method, target_file_name string) !(string, []Module) {
-	
-	trimmed_name := target_file_name.trim_string_right('.v')
+	file_cont += '\n\n' + content
 
-	method_str, mut imports := match method.method_type {
-		.custom {
-			match trimmed_name {
-				'actor' {b.write_method_to_actor(method)}
-				'client' {b.write_method_to_client(method)}
-				else {'', []Module{}}
+	if imports.len != 0 {
+		mut imports_str := []string{}
+		for imp in imports {
+			if imp_str := write_import(imp) {
+				imports_str << imp_str
 			}
 		}
-		.get {
-			match trimmed_name {
-				'methods' {b.write_get_method_to_methods(method)}
-				'actor' {b.write_method_to_actor(method)}
-				'client' {b.write_get_method_to_client(method)}
-				else {'', []Module{}}
-			}
-		}
+		imports_str << ''
+		mut file_lines := file_cont.split_into_lines()
+		file_lines.insert(2, imports_str)
+		file_cont = file_lines.join_lines()
 	}
-
-	if trimmed_name in ['methods', 'client'] && method.method_type == .get {
-		mut dir_path := b.dir_path
-		file, _ := parse_file(dir_path.extend_file('/${b.actor_name}_model/model.v')!)
-		imports << Module{
-			name: file.mod.name // TODO for some reason this returns just model?
-		}
+	os.write_file(file_path.path, file_cont) or {
+		return error('Failed to write content to file with error: \n${err}')
 	}
-
-	if method_str == '' {
-		return error("The intended destination file '${target_file_name}.v' and the method type '${method.method_type}' don't match!")
-	}
-
-	return method_str, imports
 }
 
-fn (b Builder) write_get_method_to_methods (method Method) (string, []Module) {
-
-	imports := []Module{}
-
-	mut gs := ''
-	gs += write_function_header('I${b.actor_name.capitalize()}', 'get', method.inputs.values(), method.outputs.values(), .result)
-	gs += '\t'
-	for flavor in b.core_interface.flavors {
-		gs += 'if i${b.actor_name} is $flavor {\n\t\treturn json.encode(i${b.actor_name})\n\t} else '
-	}
-	gs = gs.trim_right(' else ')
-	gs += '\n\tpanic("This point should never be reached. There is an issue with the code!")\n}'
-
-	return gs, imports
-}
-
-
-fn (b Builder) write_get_method_to_client (method Method) (string, []Module) {
-	// import freeflowuniverse.hotel.actors.kitchen.model // TODO from the get method add to imports
-	outputs := [Param{
-		data_type: 'IClient${b.actor_name.capitalize()}'
-	}]
-	mut mstr := write_function_header('${b.actor_name.capitalize()}Client', method.name, method.inputs.values(), outputs, .result)
-	bstr, imports := b.write_client_method_body(method)
-	mstr += bstr
-
-	for flavor in b.core_interface.flavors {
-		mstr += '\tif decoded := json.decode($flavor, response) {\n'
-		mstr += '\t\treturn decoded\n\t}\n'
-	}
-	mstr += '\treturn error("Failed to decode ${b.actor_name} type")'
-	mstr += '\n}\n\n'
-	return mstr, imports
-}
-
-fn (b Builder) write_method_to_client (method Method) (string, []Module) {
-	header := write_function_header('${b.actor_name.capitalize()}Client', method.name, method.inputs.values(), method.outputs.values(), .result)
-	body, imports := b.write_client_method_body(method)
-	mut outputs := '\treturn '
-	for _, data in method.outputs {
-		if data.data_type.contains('.') {
-			outputs += "json.decode(${data.data_type}, response.result.get('${data.name}')!)!, "
-		} else {
-			outputs += "response.result.get('${data.name}')!, "
-		}
-	}
-	outputs = outputs.trim_right(', ')
-	mstr := "
-${header}
-${body}
-${outputs}
-}
-
-"
-	return mstr, imports
-}
-
-
-fn (b Builder) write_client_method_body (method Method) (string, []Module) {
-	mut imports := []Module{}
-	name := b.actor_name
-	method_name := method.name
-	mut inputs := ''
-	for _, param in method.inputs {
-		if param.data_type.contains('.') {
-			inputs += "\tj_args.kwarg_add('${param.name}', json.encode(${param.name}))\n"
-			imports.add(param.src_module)
-		} else {
-			inputs += "\tj_args.kwarg_add('${param.name}', ${param.name})\n"
-		}
-	}
-	bstr := "mut j_args := params.Params{}
-	${inputs}
-	mut job := ${name}client.baobab.job_new(
-		action: 'hotel.${name}.${method_name}'
-		args: j_args
-	)!
-	response := ${name}client.baobab.job_schedule_wait(mut job, 100)!
-	if response.state == .error {
-		return error('Job returned with an error')
-	}
-	"
-
-	return bstr, imports
-}
-
-
-
-fn write_import (import_ Module) ?string {
+fn write_import(import_ Module) ?string {
 	if import_.name != '' {
-		mut stmt := 'import $import_.name'
+		mut stmt := 'import ${import_.name}'
 		if import_.alias != '' && import_.alias != import_.name.all_after_last('.') {
-			stmt += ' as $import_.alias'
-		} 
+			stmt += ' as ${import_.alias}'
+		}
 		if import_.selections.len != 0 {
 			stmt += ' {'
 			for selection in import_.selections {
-				stmt += '$selection, '
+				stmt += '${selection}, '
 			}
 			stmt = stmt.trim_string_right(', ')
 			stmt += '}'
@@ -155,81 +72,131 @@ fn write_import (import_ Module) ?string {
 	return none
 }
 
-pub fn (file File) write () string {
-	mut file_string := 'module $file.mod\n\n' 
+fn make_object(name string, attributes []Param, public bool, interface_ bool) Chunk {
+	mut pubmut := ''
+	mut prefix := ''
+	mut def := 'struct'
+	if public == true {
+		prefix = 'pub '
+		pubmut = '\npub mut:'
+	}
+	if interface_ == true {
+		prefix = 'pub '
+		def = 'interface'
+		pubmut = '\nmut:'
+	}
+	struct_str := '${prefix}${def} ${name.capitalize()} {${pubmut}
+${attributes.map('\t' + it.name +
+		'\t' + it.data_type).join('\n')}	
+}'
+	mut imports := []Module{}
+	imports << attributes.map(it.src_module)
+	return Chunk{struct_str, imports}
+}
+
+// takes the inputs of the method and produces
+// product_name string, quantity int, product product.Product
+fn (inputs []Param) istr() string {
+	mut inputs_str := ''
+	for input in inputs {
+		inputs_str += '${input.name} ${input.data_type}, '
+	}
+	inputs_str = inputs_str.trim_string_right(', ')
+	return inputs_str
+}
+
+// takes the outputs of the method and produces
+// (string, int, product.Product)
+// where the brackets are optional
+fn (outputs []Param) ostr(brackets bool) string {
+	mut outputs_str := ''
+	for output in outputs {
+		outputs_str += '${output.data_type}, '
+	}
+	outputs_str = outputs_str.trim_string_right(', ')
+	if outputs.len > 1 && brackets == true {
+		outputs_str = '(${outputs_str})'
+	}
+	return outputs_str
+}
+
+fn indent(input string, indent int) string {
+	indentation := '\t'.repeat(indent)
+	return indentation + input.split_into_lines().join('\n' + indentation)
+}
+
+fn send_receive_job(inputs_ []Param, outputs_ []Param, actor_name string, method_name string) !(string, []Module) {
+	mut imports := []Module{}
+	mut inputs := ''
+	for _, param in inputs_ {
+		if param.data_type.contains('.') {
+			inputs += "j_args.kwarg_add('${param.name}', json.encode(${param.name}))\n"
+			imports.add(param.src_module)
+		} else {
+			inputs += "j_args.kwarg_add('${param.name}', ${param.name})\n"
+		}
+	}
+	mut outputs := 'return '
+	for _, param in outputs_ {
+		if param.data_type.contains('.') {
+			outputs += "json.decode(${param.data_type}, response.result.get('${param.name}')!)!, "
+			imports.add(param.src_module)
+		} else {
+			outputs += "response.result.get('${param.name}')!, "
+		}
+	}
+	outputs = outputs.trim_right(', ')
+
+	body := "	mut j_args := params.Params{}
+${indent(inputs, 1)}
+	mut job := ${actor_name}_client.baobab.job_new(
+		action: 'hotel.${actor_name}.${method_name}'
+		args: j_args
+	)!
+	response := ${actor_name}_client.baobab.job_schedule_wait(mut job, 100)!
+	if response.state == .error {
+		return error('Job returned with an error')
+	}
+	${outputs}"
+
+	return body, imports
+}
+
+fn make_function(f FunctionParams) (string, []Module) {
+	mut imports := []Module{}
+	imports << f.inputs.map(it.src_module)
+	imports << f.outputs.map(it.src_module)
+	mut func := 'fn '
+	if f.public {
+		func = 'pub ' + func
+	}
+	if f.receiver.name != '' {
+		func += '(mut ${f.receiver.name} ${f.receiver.data_type}) '
+		imports << f.receiver.src_module
+	}
+	func += '${f.name} '
+	func += '(' + f.inputs.istr() + ')' + ' '
+	func += match f.type_ {
+		.classic { '' }
+		.result { '!' }
+		.optional { '?' }
+	}
+	func += f.outputs.ostr(true) + ' '
+	func += '{\n'
+	func += f.body
+	func += '\n}'
+
+	return func, imports
+}
+
+pub fn (file File) write() string {
+	mut file_string := 'module ${file.mod}\n\n'
 	for imp in file.imports {
-		imp_str := write_import(imp) or {continue} // todo check this is valid
-		file_string += '$imp_str\n'
+		imp_str := write_import(imp) or { continue } // todo check this is valid
+		file_string += '${imp_str}\n'
 	}
 	for content_item in file.content {
-		file_string += '$content_item\n\n'
+		file_string += '\n\n${content_item}'
 	}
 	return file_string
-}
-
-fn (b Builder) write_method_to_actor (method Method) (string, []Module) {
-	mut imports := []Module{}
-	mut mstr := ''
-	mstr += "\t\t'$method.name' {\n"
-	for _, input in method.inputs {
-		if input.data_type.contains('.') {
-			mstr += "\t\t\t${input.name} := json.decode(${input.data_type}, job.args.get('${input.name}')!)\n"
-		} else {
-			mstr += "\t\t\t${input.name} := job.args.get('${input.name}')!\n"
-		}
-		imports << input.src_module
-	}
-	mstr += "\t\t\t"
-	if method.outputs.len > 0 {
-		mstr += "${method.outputs.values().map(it.name).join(', ')} := "
-	}
-	mstr += "actor.${b.actor_name}.${method.name}(${method.inputs.values().map(it.name).join(', ')})\n"
-
-	for _, output in method.outputs {
-		mut value := output.name
-		if output.data_type.contains('.') {
-			value = 'json.encode(${output.name})'
-		}
-		mstr += "\t\t\tjob.result.kwarg_add('$output.name', $value)\n"
-		imports << output.src_module
-	}
-	mstr += '\t\t}\n'
-	return mstr, imports
-}
-
-pub enum FunctionType {
-	classic
-	result
-	optional
-}
-
-fn write_function_header (receiver_type string,  fn_name string, inputs []Param, outputs []Param, function_type FunctionType) string {
-	mut hstr := 'pub fn '
-	if receiver_type != '' {
-		hstr += '(${receiver_type.to_lower()} $receiver_type) '
-	}
-	hstr += '$fn_name ('
-	for param in inputs {
-		hstr += '${param.name} ${param.data_type}, '
-	}
-	hstr = hstr.trim_right(', ')
-	hstr += ') '
-	hstr += match function_type {
-		.classic {''}
-		.result {'!'}
-		.optional {'?'}
-	}
-	if outputs.len == 1 {
-		hstr += '${outputs[0].data_type} '
-	} else if outputs.len > 1 {
-		hstr += '('
-		for param in outputs {
-			hstr += '${param.data_type}, '
-		}
-		hstr = hstr.trim_right(', ')
-		hstr += ')'
-	}
-	hstr +=  ' {\n'
-
-	return hstr
 }

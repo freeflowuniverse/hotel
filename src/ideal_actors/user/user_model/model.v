@@ -49,7 +49,7 @@ pub interface IModelUser {
 	email string
 	phone_number string
 	date_of_birth time.Time
-	allergies string
+	allergies []string
 	preferred_contact string
 	digital_funds f64
 }

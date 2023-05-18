@@ -1,11 +1,28 @@
-module supervisor
+module supervisor_builder
 
-import freeflowuniverse.hotel.actors.supervisor.supervisor_model
+import actor_builder as ab
+
+fn (sb SupervisorBuilder) create_actor () ! {
+	mut create_branches := ''
+
+	for actor in sb.actors {
+		create_branches += "'create_${name}' {\n"
+		for flavor in actor.flavors {
+			create_branches += indent(
+"if ${name}_instance := json.decode(${name}_model.${flavor.capitalize()}, job.args.get('${name}_instance')!) {
+	actor.supervisor.create_${name}(${name}_instance)!
+}\n", 1)
+		}
+		create_branches += '}'
+	}
+
+	actor_content := "module supervisor
+
+import ${sb.actors_root}.supervisor.supervisor_model
 import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.baobab.client as baobab_client
-import freeflowuniverse.hotel.actors.user.user_model
-import freeflowuniverse.hotel.actors.kitchen.kitchen_model
 import json
+${sb.actors.map('import ${sb.actors_root}.${it.name}.${it.name}_model').join_lines()}
 
 pub struct SupervisorActor {
 pub mut:
@@ -17,7 +34,7 @@ pub mut:
 pub fn new() !SupervisorActor {
 	supervisor := supervisor_model.Supervisor{}
 
-	for actor in ['user'] {
+	for actor in ${sb.actors.map(it.name).str()} {
 		supervisor.address_books << supervisor_model.AddressBook{actor_name: actor}
 	}
 
@@ -36,19 +53,7 @@ fn (actor SupervisorActor) run() {
 
 fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 	match actionname {
-		'create_user' { // FOR EACH ACTOR
-			if user_ := json.decode(user_model.Guest, job.args.get('user_instance')!) {
-				actor.supervisor.create_user(user_instance)!
-			}
-			if user_instance := json.decode(user_model.Employee, job.args.get('user_instance')!) {
-				actor.supervisor.create_user(user_instance)!
-			}
-		}
-		'create_kitchen' {
-			if user_ := json.decode(kitchen_model.Kitchen, job.args.get('kitchen_instance')!) {
-				actor.supervisor.create_user(kitchen_instance)!
-			}
-		}
+		${indent(create_branches, 2)}
 		'get_address' {
 			actor_name := job.args.get('actor_name')!
 			actor_id := job.args.get('actor_id')!
@@ -73,4 +78,8 @@ fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 			job.state = .error
 		}
 	}
+}"
+
+	actor_path := sb.dir_path.extend_file('actor.v')!
+	ab.append_create_file(mut actor_path, actor_content, [])!
 }

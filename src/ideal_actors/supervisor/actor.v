@@ -18,7 +18,7 @@ pub fn new() !SupervisorActor {
 	supervisor := supervisor_model.Supervisor{}
 
 	for actor in ['user'] {
-		supervisor.address_books << AddressBook{actor_name: actor}
+		supervisor.address_books << supervisor_model.AddressBook{actor_name: actor}
 	}
 
 	mut supervisor_actor := SupervisorActor{
@@ -36,7 +36,7 @@ fn (actor SupervisorActor) run() {
 
 fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 	match actionname {
-		'create_user' {
+		'create_user' { // FOR EACH ACTOR
 			if user_ := json.decode(user_model.Guest, job.args.get('user_instance')!) {
 				actor.supervisor.create_user(user_instance)!
 			}

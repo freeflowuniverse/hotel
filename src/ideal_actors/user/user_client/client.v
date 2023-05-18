@@ -7,7 +7,7 @@ import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.hotel.src.ideal_actors.supervisor.supervisor_client
 import freeflowuniverse.crystallib.params
 
-pub interface IClientUser { // ? Should I replace with user_model.IModelUser
+pub interface IClientUser { // TODO replace IClientUser with IModelUser
 mut:
 	telegram_username string
 	id string
@@ -58,7 +58,7 @@ pub fn (mut userclient UserClient) get() !IClientUser {
 }
 
 // todo fix the generic portion of this function
-pub fn (mut userclient UserClient) get_attribute_json (attribute_name string) !string {
+pub fn (mut userclient UserClient) get_attribute (attribute_name string) !string {
 	mut j_args := params.Params{}
 	j_args.kwarg_add('attribute_name', attribute_name)
 	mut job := userclient.baobab.job_new(
@@ -74,72 +74,77 @@ pub fn (mut userclient UserClient) get_attribute_json (attribute_name string) !s
 
 
 pub fn (mut userclient UserClient) get_telegram_username () !string {
-	mut encoded := userclient.get_attribute_json('telegram_username')!
+	mut encoded := userclient.get_attribute('telegram_username')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_id () !string {
-	mut encoded := userclient.get_attribute_json('id')!
+	mut encoded := userclient.get_attribute('id')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_firstname () !string {
-	mut encoded := userclient.get_attribute_json('firstname')!
+	mut encoded := userclient.get_attribute('firstname')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_lastname () !string {
-	mut encoded := userclient.get_attribute_json('lastname')!
+	mut encoded := userclient.get_attribute('lastname')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_email () !string {
-	mut encoded := userclient.get_attribute_json('email')!
+	mut encoded := userclient.get_attribute('email')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_phone_number () !string {
-	mut encoded := userclient.get_attribute_json('phone_number')!
+	mut encoded := userclient.get_attribute('phone_number')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_date_of_birth () !time.Time {
-	mut encoded := userclient.get_attribute_json('date_of_birth')!
+	mut encoded := userclient.get_attribute('date_of_birth')!
 	return json.decode(time.Time, encoded)!
 }
 
 pub fn (mut userclient UserClient) get_allergies () ![]string {
-	mut encoded := userclient.get_attribute_json('allergies')!
+	mut encoded := userclient.get_attribute('allergies')!
 	return json.decode([]string, encoded)!
 }
 
+pub fn (mut user_client UserClient) get_preferred_contact () !string {
+	mut encoded := user_client.get_attribute('preferred_contact')
+	return encoded.trim('"').trim("'")
+}
+
 pub fn (mut userclient UserClient) get_digital_funds () !f64 {
-	mut encoded := userclient.get_attribute_json('digital_funds')!
+	mut encoded := userclient.get_attribute('digital_funds')!
 	return encoded.f64()
 }
 
 pub fn (mut userclient UserClient) get_title () !string {
-	mut encoded := userclient.get_attribute_json('title')!
+	mut encoded := userclient.get_attribute('title')!
 	return encoded.trim('"').trim("'")
 }
 
 pub fn (mut userclient UserClient) get_actor_names () ![]string {
-	mut encoded := userclient.get_attribute_json('actor_names')!
+	mut encoded := userclient.get_attribute('actor_names')!
 	return json.decode([]string, encoded)!
 }
 
 pub fn (mut userclient UserClient) get_shifts () ![]user_model.Shift {
-	mut encoded := userclient.get_attribute_json('shifts')!
+	mut encoded := userclient.get_attribute('shifts')!
 	return json.decode([]user_model.Shift, encoded)!
 }
 
 pub fn (mut userclient UserClient) get_working () !bool {
-	mut encoded := userclient.get_attribute_json('working')!
+	mut encoded := userclient.get_attribute('working')!
 	return encoded.bool()
 }
 
 pub fn (mut userclient UserClient) get_holidays_remaining () !int {
-	mut encoded := userclient.get_attribute_json('holidays_remaining')!
+	mut encoded := userclient.get_attribute('holidays_remaining')!
 	return encoded.int()
 }
 
@@ -264,6 +269,23 @@ pub fn (mut userclient UserClient) get_all () ![]IClientUser {
 	return users
 }
 
+pub fn (mut userclient UserClient) search_telegram_username (telegram_username string) ![]string {
+	mut supervisor := supervisor_client.new() or {
+		return error('Failed to create a new supervisor client with error: ${err}')
+	}
+	address_book := supervisor.get_address_book('user')!
+	mut matching_users := []string{}
+	for id, address in address_book {
+		mut check_user_client := UserClient{
+			user_address: address
+			baobab: baobab_client.new('0')!
+		}
+		check_value := check_user_client.get_telegram_username()!
+		if telegram_username == check_value { matching_users << id }
+	}
+	return matching_users
+}
+
 // todo fix the generic portion of this function
 pub fn (mut userclient UserClient) check_all[T] (attribute_name string, check_value T) ![]string {
 	mut supervisor := supervisor_client.new() or {
@@ -271,7 +293,7 @@ pub fn (mut userclient UserClient) check_all[T] (attribute_name string, check_va
 	}
 	address_book := supervisor.get_address_book('user')!
 	mut matching_users := []string{}
-	for id, address in address_book {
+	for id, address in address_book.filter {
 		if address != userclient.user_address {
 			mut user_client := UserClient{
 				user_address: address

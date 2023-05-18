@@ -19,10 +19,11 @@ pub fn new (user_instance IUser, id string) !UserActor {
 }
 
 fn (actor UserActor) run() {
+	for {}
 }
 
 fn (mut actor UserActor) execute(mut job ActionJob) ! {
-	actionname := job.action.all_after_last('.')
+	
 	match actionname {
 		'get' {
 			encoded_user := actor.user.get()!
@@ -39,7 +40,7 @@ fn (mut actor UserActor) execute(mut job ActionJob) ! {
 			actor.user.edit_attribute(attribute_name, encoded_value)!
 		}
 		'delete' {
-			panic("This actor has been deleted!") //? This will return an error to the client, but this is strange, because an error in this case means a success, but an error can also mean a failure
+			panic("This actor has been deleted!") //? This will return an error to the client, but this is strange, because an error in this case means a success, but an error can also mean a failure // TODO use exit instead, I think that will work appropriately
 		}
 		else {
 			return error("Could not identify the method name: '$actionname' !")

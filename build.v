@@ -3,14 +3,14 @@ module main
 import freeflowuniverse.hotel.actor_builder
 import os
 
-const actors = ['user', 'supervisor', 'kitchen']
+const actors = ['user', 'kitchen']
 
 fn main() {
 	dir_path := os.dir(@FILE)
 	actor_dir_path := dir_path + '/actors'
 
-	for actor in ['supervisor','kitchen', 'user'] {
-		mut builder := actor_builder.new(actor_dir_path + '/' + actor) or { panic("Failed to generate a new builder for $actor with error: $err") }
+	for actor in actors {
+		mut builder := actor_builder.new_actor(actor_dir_path + '/' + actor, 'freeflowuniverse.hotel.actors') or { panic("Failed to generate a new builder for $actor with error: $err") }
 		builder.build() or { panic("Failed to execute build with error: $err") }
 	}
 }

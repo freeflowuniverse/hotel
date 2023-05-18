@@ -1,16 +1,33 @@
-module supervisor_client
+module supervisor_builder
 
-import freeflowuniverse.hotel.src.ideal_actors.user.user_model
-import freeflowuniverse.hotel.src.ideal_actors.kitchen.kitchen_model
-import supervisor_model
+
+pub fn (sb SupervisorBuilder) create_client () {
+
+	mut create_functions := ''
+	for name in sb.actors.map(it.name) {
+		create_functions += "
+pub fn (mut supervisorclient SupervisorClient) create_${name}(${name}_instance ${name}_model.IModel${name.capitalize()}) ! {
+	mut j_args := params.Params{}
+	j_args.kwarg_add('${name}_instance', json.encode(${name}_instance))
+	mut job := supervisorclient.baobab.job_new(
+		action: 'hotel.supervisor.create_${name}'
+		args: j_args
+	)!
+	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
+	if response.state == .error {
+		return error('Job returned with an error')
+	}
+	return
+}
+"	}
+
+	client_content := "module supervisor_client
+
+${sb.actors.map('import ${sb.actors_root}.${it.name}.${it.name}_model').join_lines()}
+import ${sb.actors_root}.supervisor.supervisor_model
 import json
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.crystallib.params
-
-pub interface IClientSupervisor {
-mut:
-	address_books []supervisor_model.AddressBook
-}
 
 pub struct SupervisorClient {
 pub mut:
@@ -21,37 +38,11 @@ pub mut:
 pub fn new() !SupervisorClient {
 	return SupervisorClient{
 		supervisor_address: '0'
-		baobab: baobab_client.new('0') or {return error("Failed to create new baobab client with error: \n$err")}
+		baobab: baobab_client.new('0') or {return error('Failed to create new baobab client with error: \n\$err')}
 	}
 }
 
-pub fn (mut supervisorclient SupervisorClient) create_user(user_instance user_model.IModelUser) ! { // FOR EACH ACTOR
-	mut j_args := params.Params{}
-	j_args.kwarg_add('user_instance', json.encode(user_instance))
-	mut job := supervisorclient.baobab.job_new(
-		action: 'hotel.supervisor.create_user'
-		args: j_args
-	)!
-	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
-	if response.state == .error {
-		return error('Job returned with an error')
-	}
-	return
-}
-
-pub fn (mut supervisorclient SupervisorClient) create_kitchen (kitchen_instance kitchen_model.IModelKitchen) ! {
-	mut j_args := params.Params{}
-	j_args.kwarg_add('kitchen_instance', json.encode(kitchen_instance))
-	mut job := supervisorclient.baobab.job_new(
-		action: 'hotel.supervisor.create_kitchen'
-		args: j_args
-	)!
-	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
-	if response.state == .error {
-		return error('Job returned with an error')
-	}
-	return
-}
+${create_functions}
 
 pub fn (mut supervisorclient SupervisorClient) get_address(actor_name string, actor_id string) !string {
 	mut j_args := params.Params{}
@@ -97,18 +88,24 @@ pub fn (mut supervisorclient SupervisorClient) edit_address_book(actor_name stri
 	return
 }
 
-pub fn (mut supervisorclient SupervisorClient) get() !IClientSupervisor {
+pub fn (mut supervisorclient SupervisorClient) get() !IModelSupervisor {
 	mut j_args := params.Params{}
 	mut job := supervisorclient.baobab.job_new(
 		action: 'hotel.supervisor.get'
 		args: j_args
 	)!
 	response := supervisorclient.baobab.job_schedule_wait(mut job, 100)!
-	if response.state == .error { // todo this will need to be fixed up
+	if response.state == .error {
 		return error('Job returned with an error')
 	}
 	if decoded := json.decode(supervisor_model.Supervisor, response.result.get('encoded_supervisor')!) {
 		return decoded
 	}
 	return error('Failed to decode supervisor type')
+}
+
+"
+
+	client_path := sb.dir_path.extend_file('supervisor_client/client.v')!
+	ab.append_create_file(mut client_path, client_content, [])!
 }
