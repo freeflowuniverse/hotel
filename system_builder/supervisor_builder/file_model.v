@@ -1,8 +1,9 @@
 module supervisor_builder
 
+import os
 import actor_builder as ab
 
-fn (sb SupervisorBuilder) create_model () {
+fn (mut sb SupervisorBuilder) create_model () ! {
 	model_content := "module supervisor_model
 
 pub struct Supervisor {
@@ -22,8 +23,8 @@ pub mut:
 
 pub interface IModelSupervisor {
 	address_books []AddressBook
-}"
-
-	model_path := sb.dir_path.extend_file('supervisor_model/model.v')!
-	ab.append_create_file(mut model_file.path, model_content, [])!
+}"	
+	mut model_dir_path := sb.dir_path.extend_dir_create('supervisor_model')!
+	mut model_path := model_dir_path.extend_file('model.v')!
+	ab.append_create_file(mut model_path, model_content, [])!
 }

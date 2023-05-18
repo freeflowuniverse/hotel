@@ -1,6 +1,6 @@
 module actor_builder
 
-fn (mut b Builder) create_client() ! {
+fn (mut b ActorBuilder) create_client() ! {
 	mut client_file := File{
 		mod: '${b.actor_name}_client'
 		path: b.dir_path.extend_file('${b.actor_name}_client/client.v')!
@@ -20,7 +20,7 @@ fn (mut b Builder) create_client() ! {
 	client_file.write_file()!
 }
 
-fn (b Builder) new_client() Chunk {
+fn (b ActorBuilder) new_client() Chunk {
 	name := b.actor_name
 	client_body := "
 	mut supervisor := supervisor_client.new() or {
@@ -60,7 +60,7 @@ fn (b Builder) new_client() Chunk {
 	return Chunk{client_str, imports}
 }
 
-fn (b Builder) custom_client () !Chunk {
+fn (b ActorBuilder) custom_client () !Chunk {
 	mut main_chunk := Chunk{}
 	for method in b.actor_methods {
 		if method.custom == true {
@@ -98,7 +98,7 @@ pub fn (method Method) client() !Chunk {
 	return Chunk{func, imports}
 }
 
-pub fn (mut b Builder) get_client() !Chunk {
+pub fn (mut b ActorBuilder) get_client() !Chunk {
 	mut body, mut imports := send_receive_job([], [], b.actor_name, 'get')!
 	body = body.all_before_last('\treturn') // ? check if fixed
 
@@ -127,7 +127,7 @@ pub fn (mut b Builder) get_client() !Chunk {
 	return Chunk{get_str, imports}
 }
 
-pub fn (mut b Builder) get_attribute_client() !Chunk {
+pub fn (mut b ActorBuilder) get_attribute_client() !Chunk {
 	inputs := [Param{
 		name: 'attribute_name'
 		data_type: 'string'
@@ -186,7 +186,7 @@ pub fn (mut b Builder) get_attribute_client() !Chunk {
 	return Chunk{str, imports}
 }
 
-pub fn (mut b Builder) edit_attribute_client() !Chunk {
+pub fn (mut b ActorBuilder) edit_attribute_client() !Chunk {
 	inputs := [Param{
 		name: 'attribute_name'
 		data_type: 'string'
@@ -236,7 +236,7 @@ pub fn (mut b Builder) edit_attribute_client() !Chunk {
 	return Chunk{str, imports}
 }
 
-pub fn (mut b Builder) delete_client() !Chunk {
+pub fn (mut b ActorBuilder) delete_client() !Chunk {
 
 	mut body, mut imports := send_receive_job([], [], b.actor_name, 'delete')!
 
@@ -256,7 +256,7 @@ pub fn (mut b Builder) delete_client() !Chunk {
 }
 
 
-pub fn (mut b Builder) get_all_client() !Chunk {
+pub fn (mut b ActorBuilder) get_all_client() !Chunk {
 
 	receiver := Param{name: '${b.actor_name}_client', data_type: '${b.actor_name.capitalize()}Client'}
 	output := Param{name: '${b.actor_name}s', data_type: '[]IModel${b.actor_name.capitalize()}', src_module:Module{name:'${b.actors_root}.${b.actor_name}.${b.actor_name}_model'}}
@@ -291,7 +291,7 @@ return ${output.name}"
 	return Chunk{str, imports}
 }
 
-pub fn (mut b Builder) search_attribute_client() !Chunk {
+pub fn (mut b ActorBuilder) search_attribute_client() !Chunk {
 	mut imports := []Module{}
 	mut full_str := ''
 	mut params := b.model.core_attributes.clone()

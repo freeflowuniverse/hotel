@@ -2,7 +2,7 @@ module actor_builder
 
 import freeflowuniverse.crystallib.pathlib
 
-pub struct Builder {
+pub struct ActorBuilder {
 pub mut:
 	actor_name    string
 	model         Model
@@ -155,24 +155,3 @@ fn (mut imports []Module) deduct_many(imps_list ...[]Module) {
 }
 
 
-pub struct SystemParams {
-	actors_dir_path pathlib.Path
-	actors []ActorParams
-}
-
-pub struct ActorParams {
-	name string
-	methods []string = ['get', 'get_attribute', 'edit_attribute', 'delete']
-}
-
-/*
-pub struct System {
-	actors []ActorBuilder
-	supervisor SupervisorBuilder
-	interface_manager InterfaceManagerBuilder
-}
-
-pub struct ActorBuilder {}
-pub struct SupervisorBuilder {}
-pub struct InterfaceManagerBuilder {}
-*/

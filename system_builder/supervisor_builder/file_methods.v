@@ -2,8 +2,7 @@ module supervisor_builder
 
 import actor_builder as ab
 
-pub fn (sb SupervisorBuilder) create_methods () {
-
+pub fn (mut sb SupervisorBuilder) create_methods () ! {
 	mut create_functions := ''
 	for name in sb.actors.map(it.name) {
 		create_functions += "
@@ -14,12 +13,14 @@ pub fn (isupervisor ISupervisor) create_${name}(${name}_instance ${name}.I${name
 }
 "	}
 
+	extra_imports := sb.actors.map('import ${sb.actors_root}.${it.name}').join_lines()
+
 	methods_content := "module supervisor
 
 import ${sb.actors_root}.supervisor.supervisor_model
 import json
 import freeflowuniverse.baobab.client as baobab_client
-${sb.actors.map('import ${sb.actors_root}.${it.name}').join_lines()}
+${extra_imports}
 
 pub interface ISupervisor {
 mut:
@@ -82,6 +83,6 @@ pub fn (isupervisor ISupervisor) get() !string {
 ${create_functions}
 "
 
-	methods_path := sb.dir_path.extend_file('methods.v')!
+	mut methods_path := sb.dir_path.extend_file('methods.v')!
 	ab.append_create_file(mut methods_path, methods_content, [])!
 }

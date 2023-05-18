@@ -4,7 +4,7 @@ import os
 import freeflowuniverse.crystallib.pathlib
 
 // TODO cant use a regular builder, because for loop needs names of all actors
-// fn (mut b Builder) new_supervisor () (string, []Module) {
+// fn (mut b ActorBuilder) new_supervisor () (string, []Module) {
 // 	new_supervisor_func := "pub fn new() !SupervisorActor {
 // 	supervisor := supervisor_model.Supervisor{}
 
@@ -24,7 +24,7 @@ import freeflowuniverse.crystallib.pathlib
 // 	return new_supervisor_func, imports
 // }
 
-fn append_create_file(mut file_path pathlib.Path, content string, imports []Module) ! {
+pub fn append_create_file(mut file_path pathlib.Path, content string, imports []Module) ! {
 	mut file_cont := ''
 	if file_path.exists() {
 		file_cont = os.read_file(file_path.path) or {
@@ -120,7 +120,7 @@ fn (outputs []Param) ostr(brackets bool) string {
 	return outputs_str
 }
 
-fn indent(input string, indent int) string {
+pub fn indent(input string, indent int) string {
 	indentation := '\t'.repeat(indent)
 	return indentation + input.split_into_lines().join('\n' + indentation)
 }

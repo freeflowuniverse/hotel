@@ -2,19 +2,22 @@ module supervisor_builder
 
 import actor_builder as ab
 
-fn (sb SupervisorBuilder) create_actor () ! {
+fn (mut sb SupervisorBuilder) create_actor () ! {
 	mut create_branches := ''
 
 	for actor in sb.actors {
-		create_branches += "'create_${name}' {\n"
+		create_branches += "'create_${actor.name}' {\n"
 		for flavor in actor.flavors {
-			create_branches += indent(
-"if ${name}_instance := json.decode(${name}_model.${flavor.capitalize()}, job.args.get('${name}_instance')!) {
-	actor.supervisor.create_${name}(${name}_instance)!
-}\n", 1)
-		}
-		create_branches += '}'
+			create_branches +=
+"	if ${actor.name}_instance := json.decode(${actor.name}_model.${flavor.capitalize()}, job.args.get('${actor.name}_instance')!) {
+		actor.supervisor.create_${actor.name}(${actor.name}_instance)!
 	}
+"
+		}
+		create_branches += '}\n'
+	}
+
+	extra_imports := sb.actors.map('import ${sb.actors_root}.${it.name}.${it.name}_model').join_lines()
 
 	actor_content := "module supervisor
 
@@ -22,7 +25,8 @@ import ${sb.actors_root}.supervisor.supervisor_model
 import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.baobab.client as baobab_client
 import json
-${sb.actors.map('import ${sb.actors_root}.${it.name}.${it.name}_model').join_lines()}
+${extra_imports}
+
 
 pub struct SupervisorActor {
 pub mut:
@@ -53,7 +57,7 @@ fn (actor SupervisorActor) run() {
 
 fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 	match actionname {
-		${indent(create_branches, 2)}
+${ab.indent(create_branches, 2)}
 		'get_address' {
 			actor_name := job.args.get('actor_name')!
 			actor_id := job.args.get('actor_id')!
@@ -80,6 +84,6 @@ fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 	}
 }"
 
-	actor_path := sb.dir_path.extend_file('actor.v')!
+	mut actor_path := sb.dir_path.extend_file('actor.v')!
 	ab.append_create_file(mut actor_path, actor_content, [])!
 }

@@ -2,7 +2,7 @@ module actor_builder
 
 import v.ast
 
-fn (mut b Builder) parse_update_methods() ! {
+fn (mut b ActorBuilder) parse_update_methods() ! {
 	mut methods_file := File{
 		path: b.dir_path.extend_file('methods.v')!
 	}
@@ -19,7 +19,7 @@ fn (mut b Builder) parse_update_methods() ! {
 	append_create_file(mut methods_file.path, methods_file.content.join('\n\n'), methods_file.imports)!
 }
 
-fn (mut b Builder) parse_methods(file &ast.File, table &ast.Table) ! {
+fn (mut b ActorBuilder) parse_methods(file &ast.File, table &ast.Table) ! {
 	for stmt in file.stmts {
 		if stmt is ast.FnDecl {
 			if stmt.is_pub == true {
@@ -31,7 +31,7 @@ fn (mut b Builder) parse_methods(file &ast.File, table &ast.Table) ! {
 	}
 }
 
-fn (mut b Builder) init_standard_methods(src_module Module) {
+fn (mut b ActorBuilder) init_standard_methods(src_module Module) {
 	for method_name in ['get', 'get_attribute', 'edit_attribute', 'delete'] {
 		mut method := Method{
 			actor_name: b.actor_name
@@ -85,7 +85,7 @@ fn (mut b Builder) init_standard_methods(src_module Module) {
 	}
 }
 
-pub fn (mut b Builder) get_methods() Chunk {
+pub fn (mut b ActorBuilder) get_methods() Chunk {
 	mut ifs := ''
 	for model_struct in b.model.structs {
 		ifs += "if i${b.actor_name} is ${model_struct.name} {\n\treturn json.encode(i${b.actor_name})\n} else "
@@ -113,7 +113,7 @@ pub fn (mut b Builder) get_methods() Chunk {
 	return Chunk{methods_str, imports}
 }
 
-pub fn (mut b Builder) get_attribute_methods() Chunk {
+pub fn (mut b ActorBuilder) get_attribute_methods() Chunk {
 
 	encode := fn [b] (params []Param) string {
 		return params.map("'${it.name}' \{ return json.encode(i${b.actor_name}.${it.name}) \}").join_lines()
@@ -161,7 +161,7 @@ ${indent(flavor_branches.join_lines(), 2)}
 	return Chunk{methods_str, imports}
 }
 
-pub fn (mut b Builder) edit_attribute_methods() Chunk {
+pub fn (mut b ActorBuilder) edit_attribute_methods() Chunk {
 	decode := fn [b] (params []Param) string {
 		mut lines := []string{}
 		for param in params {

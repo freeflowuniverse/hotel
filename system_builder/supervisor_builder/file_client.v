@@ -1,7 +1,9 @@
 module supervisor_builder
 
+import os
+import actor_builder as ab
 
-pub fn (sb SupervisorBuilder) create_client () {
+pub fn (mut sb SupervisorBuilder) create_client () ! {
 
 	mut create_functions := ''
 	for name in sb.actors.map(it.name) {
@@ -21,13 +23,15 @@ pub fn (mut supervisorclient SupervisorClient) create_${name}(${name}_instance $
 }
 "	}
 
+	extra_imports := sb.actors.map('import ${sb.actors_root}.${it.name}.${it.name}_model').join_lines()
+
 	client_content := "module supervisor_client
 
-${sb.actors.map('import ${sb.actors_root}.${it.name}.${it.name}_model').join_lines()}
 import ${sb.actors_root}.supervisor.supervisor_model
 import json
 import freeflowuniverse.baobab.client as baobab_client
 import freeflowuniverse.crystallib.params
+${extra_imports}
 
 pub struct SupervisorClient {
 pub mut:
@@ -38,7 +42,7 @@ pub mut:
 pub fn new() !SupervisorClient {
 	return SupervisorClient{
 		supervisor_address: '0'
-		baobab: baobab_client.new('0') or {return error('Failed to create new baobab client with error: \n\$err')}
+		baobab: baobab_client.new('0') or {return error('Failed to create new baobab client with error: \\n\$err')}
 	}
 }
 
@@ -105,7 +109,7 @@ pub fn (mut supervisorclient SupervisorClient) get() !IModelSupervisor {
 }
 
 "
-
-	client_path := sb.dir_path.extend_file('supervisor_client/client.v')!
+	mut client_dir_path := sb.dir_path.extend_dir_create('supervisor_client')!
+	mut client_path := client_dir_path.extend_file('client.v')!
 	ab.append_create_file(mut client_path, client_content, [])!
 }

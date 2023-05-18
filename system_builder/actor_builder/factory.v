@@ -4,10 +4,9 @@ import freeflowuniverse.crystallib.pathlib
 
 // TODO mutable params for functions specifically for when there is an ActionJob input
 
-pub fn new_actor (actor_dir_path string, actors_import_root string) !Builder {
-	mut dir_path := pathlib.get(actor_dir_path)
+pub fn new_actor (actor_dir_path pathlib.Path, actors_import_root string) !ActorBuilder {
 	if dir_path.exist != .yes {
-		return error('Nothing exists at the file path destination!')
+		return error('Nothing exists at the directory path destination!')
 	} else if dir_path.cat != .dir {
 		return error('The file path does not lead to a directory! Ensure that the actor directory path, rather any file, is passed into this function')
 	}
@@ -30,14 +29,14 @@ pub fn new_actor (actor_dir_path string, actors_import_root string) !Builder {
 		}
 	}
 
-	return Builder{
+	return ActorBuilder{
 		dir_path: dir_path
 		actor_name: actor_name
 		actors_root: actors_import_root
 	}
 }
 
-pub fn (mut b Builder) build() ! {
+pub fn (mut b ActorBuilder) build() ! {
 	b.parse_update_model()!
 	b.parse_update_methods()!
 	b.create_actor()!

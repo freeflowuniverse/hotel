@@ -1,6 +1,6 @@
 module actor_builder
 
-fn (mut b Builder) create_actor() ! {
+fn (mut b ActorBuilder) create_actor() ! {
 	mut actor_file := File{
 		mod: '${b.actor_name}'
 		path: b.dir_path.extend_file('actor.v')!
@@ -28,7 +28,7 @@ fn (mut b Builder) create_actor() ! {
 	actor_file.write_file()!
 }
 
-fn (b Builder) new_actor() Chunk {
+fn (b ActorBuilder) new_actor() Chunk {
 	body := "return ${b.actor_name.capitalize()}Actor {
 	id: id
 	${b.actor_name}: ${b.actor_name}_instance
@@ -61,7 +61,7 @@ fn (b Builder) new_actor() Chunk {
 	return Chunk{func, imports}
 }
 
-fn (b Builder) router_actor() !Chunk {
+fn (b ActorBuilder) router_actor() !Chunk {
 	mut imports := []Module{}
 	mut branches := []string{}
 	// router_branch (actor_name string, name string, inputs []Params, outputs []Params)
@@ -140,7 +140,7 @@ fn router_branch(actor_name string, method Method) Chunk {
 	return Chunk{branch_string, imports}
 }
 
-fn (b Builder) run_actor() Chunk {
+fn (b ActorBuilder) run_actor() Chunk {
 	func, imports := make_function(
 		name: 'run'
 		receiver: Param{

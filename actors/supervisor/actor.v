@@ -1,11 +1,14 @@
+
+
 module supervisor
 
 import freeflowuniverse.hotel.actors.supervisor.supervisor_model
 import freeflowuniverse.baobab.jobs { ActionJob }
 import freeflowuniverse.baobab.client as baobab_client
+import json
 import freeflowuniverse.hotel.actors.user.user_model
 import freeflowuniverse.hotel.actors.kitchen.kitchen_model
-import json
+
 
 pub struct SupervisorActor {
 pub mut:
@@ -17,7 +20,7 @@ pub mut:
 pub fn new() !SupervisorActor {
 	supervisor := supervisor_model.Supervisor{}
 
-	for actor in ['user'] {
+	for actor in ['user', 'kitchen'] {
 		supervisor.address_books << supervisor_model.AddressBook{actor_name: actor}
 	}
 
@@ -36,17 +39,17 @@ fn (actor SupervisorActor) run() {
 
 fn (actor SupervisorActor) execute(mut job ActionJob) ! {
 	match actionname {
-		'create_user' { // FOR EACH ACTOR
-			if user_ := json.decode(user_model.Guest, job.args.get('user_instance')!) {
+		'create_user' {
+			if user_instance := json.decode(user_model.User_model.Guest, job.args.get('user_instance')!) {
 				actor.supervisor.create_user(user_instance)!
 			}
-			if user_instance := json.decode(user_model.Employee, job.args.get('user_instance')!) {
+			if user_instance := json.decode(user_model.User_model.Employee, job.args.get('user_instance')!) {
 				actor.supervisor.create_user(user_instance)!
 			}
 		}
 		'create_kitchen' {
-			if user_ := json.decode(kitchen_model.Kitchen, job.args.get('kitchen_instance')!) {
-				actor.supervisor.create_user(kitchen_instance)!
+			if kitchen_instance := json.decode(kitchen_model.Kitchen_model.Kitchen, job.args.get('kitchen_instance')!) {
+				actor.supervisor.create_kitchen(kitchen_instance)!
 			}
 		}
 		'get_address' {

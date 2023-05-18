@@ -4,7 +4,7 @@ import freeflowuniverse.crystallib.pathlib
 import v.ast
 
 // Reads the model.v file, creates an interface and writes it
-fn (mut b Builder) parse_update_model() ! {
+fn (mut b ActorBuilder) parse_update_model() ! {
 	mut model_file := File{
 		path: b.dir_path.extend_file('${b.actor_name}_model/model.v')!
 	}
@@ -18,7 +18,7 @@ fn (mut b Builder) parse_update_model() ! {
 }
 
 // This function simply gets the different structs from the ACTOR_model/model.v file. It should also check to make sure the model is valid
-fn (mut b Builder) parse_model(model_path pathlib.Path) ! {
+fn (mut b ActorBuilder) parse_model(model_path pathlib.Path) ! {
 	model_file, table := parse_file(model_path)
 	// Gets all the declared structs from the parsed file
 	mut structs := []ast.StructDecl{}

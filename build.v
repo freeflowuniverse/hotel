@@ -1,19 +1,25 @@
 module main
 
 import freeflowuniverse.hotel.actor_builder
+import freeflowuniverse.hotel.supervisor_builder
 import os
 
 const actors = ['user', 'kitchen']
 
 fn main() {
-	dir_path := os.dir(@FILE)
-	actor_dir_path := dir_path + '/actors'
+	actor_dir_path := os.dir(@FILE) + '/actors'
+	actors_root := 'freeflowuniverse.hotel.actors'
+	mut sb := supervisor_builder.new_supervisor([]supervisor_builder.Actor{}, actor_dir_path + '/supervisor', actors_root)!
 
 	for actor in actors {
-		mut builder := actor_builder.new_actor(actor_dir_path + '/' + actor, 'freeflowuniverse.hotel.actors') or { panic("Failed to generate a new builder for $actor with error: $err") }
+		mut builder := actor_builder.new_actor(actor_dir_path + '/' + actor, actors_root) or { panic("Failed to generate a new builder for $actor with error: $err") }
 		builder.build() or { panic("Failed to execute build with error: $err") }
+		sb.register(builder)
 	}
+
+	sb.build()!
 }
+
 
 /*
 order1 := common.Order{

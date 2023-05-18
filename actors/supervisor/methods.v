@@ -1,21 +1,16 @@
+
+
 module supervisor
 
 import freeflowuniverse.hotel.actors.supervisor.supervisor_model
-import freeflowuniverse.hotel.actors.user
-import freeflowuniverse.baobab.client as baobab_client
-import freeflowuniverse.hotel.actors.kitchen
 import json
+import freeflowuniverse.baobab.client as baobab_client
+import freeflowuniverse.hotel.actors.user
+import freeflowuniverse.hotel.actors.kitchen
 
-pub fn (isupervisor ISupervisor) create_user(user_instance user.IUser) { // FOR EACH ACTOR
-	id := isupervisor.generate_id('user')! 
-	mut new_user := user.new(id, user_instance)!
-	spawn new_user.run() // todo will need to refactor. This actor needs to be added to the action runner
-}
-
-pub fn (isupervisor ISupervisor) create_kitchen(kitchen_instance kitchen.IKitchen) {
-	id := isupervisor.generate_id('kitchen')!
-	mut new_kitchen := kitchen.new(id, kitchen_instance)!
-	spawn new_kitchen.run()
+pub interface ISupervisor {
+mut:
+	address_books []supervisor_model.AddressBook
 }
 
 pub fn (isupervisor ISupervisor) get_address_book(actor_name string) !map[string]string {
@@ -71,9 +66,16 @@ pub fn (isupervisor ISupervisor) get() !string {
 	panic('This point should never be reached. There is an issue with the code generation! Not all actor flavours have been accounted for.')
 }
 
-pub interface ISupervisor {
-mut:
-	address_books []supervisor_model.AddressBook
+
+pub fn (isupervisor ISupervisor) create_user(user_instance user.IUser) {
+	id := isupervisor.generate_id('user')! 
+	mut new_user := user.new(id, user_instance)!
+	spawn new_user.run()
 }
 
+pub fn (isupervisor ISupervisor) create_kitchen(kitchen_instance kitchen.IKitchen) {
+	id := isupervisor.generate_id('kitchen')! 
+	mut new_kitchen := kitchen.new(id, kitchen_instance)!
+	spawn new_kitchen.run()
+}
 

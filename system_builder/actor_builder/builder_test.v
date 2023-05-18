@@ -52,8 +52,8 @@ pub fn dummy_methods() []IMethod {
 	return [custom, get, get_attr, edit_attr]
 }
 
-pub fn dummy_builder() Builder {
-	builder := Builder{
+pub fn dummy_builder() ActorBuilder {
+	builder := ActorBuilder{
 		core_interface: Interface{
 			flavors: ['guest', 'employee']
 			attrs: dummy_params()[0..3]
